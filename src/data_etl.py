@@ -79,12 +79,18 @@ class DataETL:
         assert not self.CHURN_STATUS_DF.empty , "Churn Status DF is None!"
         assert not self.CITY_DF.empty , "City DF is None!"
         assert not self.CUSTOMER_DF.empty , "Customer DF is None!"
+
+    def get_df(self)->pd.DataFrame:
+        """
+        Returns the joined dataframe.
+        """
+        return self.df
         
         
 
 if __name__ == "__main__":
     etl = DataETL()
-    etl.test_db_connection()
+    # etl.test_db_connection()
     etl.use_local_data("research/data_given/")
     etl.join_tables()
     print(etl.df.head())
