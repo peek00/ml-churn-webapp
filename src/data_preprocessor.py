@@ -21,6 +21,8 @@ class DataPreprocessor:
         self.label_encoder = LabelEncoder()
         # self._validate_df()
         self.__preprocess()
+        # pd.set_option('display.max_columns', None)  # None will display all columns
+        # print(self.df.head())
 
     def __validate_df(self):
         """
@@ -48,6 +50,7 @@ class DataPreprocessor:
         self.df['senior_citizen'] = self.__map_categorical(self.df['senior_citizen'])
         self.df['married'] = self.__map_categorical(self.df['married'])
         self.df['gender'] = self.__map_categorical(self.df['gender'])
+        self.df['contract_type'] = self.__map_categorical(self.df['contract_type'], custom_mapping={'Month-to-Month':0, 'One Year':1, 'Two Year':2})
 
         # Scaling numerical values
         self.df['num_referrals'] = self.__scale_numerical(self.df['num_referrals'])
@@ -71,14 +74,26 @@ class DataPreprocessor:
         self.df.drop('churn_category', axis=1, inplace=True)
 
         # One hot encode
-        print("Trying to one hot encode")
-        print(f"Input is {self.df['payment_method']} ")
-        _ = self.__one_hot_encode(self.df['payment_method'])
-        print(f"Output is {_} ")
+        # Payment method
+        ohe_payment_method = self.__one_hot_encode(self.df['payment_method'])
+        self.df = pd.concat([self.df, ohe_payment_method], axis=1)
+        # Dropping payment method
+        self.df = self.df.drop('payment_method', axis=1)
+        # Internet_type
+        ohe_internet_type = self.__one_hot_encode(self.df['internet_type'])
+        self.df = pd.concat([self.df, ohe_internet_type], axis=1)
+        # Dropping internet type
+        self.df = self.df.drop('internet_type', axis=1)
 
+        # Fixing churn_labels
+        self.df.loc[self.df['status'] == 2, 'churn_label'] = "1"
+        self.df.loc[self.df['status'] == 0, 'churn_label'] = "0"
+        self.df.loc[self.df['status'] == 1, 'churn_label'] = "0"
 
-
-
+        # Dropping
+        cols_to_drop = ['churn_reason', 'city', 'latitutde', 'longitude', 'area_id']
+        self.df = self.df.drop(cols_to_drop, axis=1)
+        
 
     def __label_encode(self, col:pd.Series)->pd.Series:
         return self.label_encoder.fit_transform(col)        
@@ -92,7 +107,10 @@ class DataPreprocessor:
             "Yes": 1,
             "No": 0,
             "Male": 1,
-            "Female": 0
+            "Female": 0,
+            "Joined": 0,
+            "Stayed": 1,
+            "Churned": 2,
         }
         if custom_mapping:
             return col.map(custom_mapping)
@@ -123,6 +141,13 @@ class DataPreprocessor:
         """
         oh_encoded = pd.get_dummies(col)
         return oh_encoded
+    
+    def get_NaN_count(self)->dict:
+        """
+        Returns the number of NaN values for each column in a dictionary.
+        """
+        nan_count = self.df.isna().sum().to_dict()
+        return nan_count
 
         
     
@@ -136,5 +161,6 @@ if __name__ == "__main__":
 
     dp = DataPreprocessor(df)
     dp.df.head()
+    print(dp.get_NaN_count())
  
 
