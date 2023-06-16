@@ -89,9 +89,9 @@ class DataPreprocessor:
         self.df = self.df.drop('internet_type', axis=1)
 
         # Fixing churn_labels
-        self.df.loc[self.df['status'] == 2, 'churn_label'] = "1"
-        self.df.loc[self.df['status'] == 0, 'churn_label'] = "0"
-        self.df.loc[self.df['status'] == 1, 'churn_label'] = "0"
+        self.df.loc[self.df['status'] == 2, 'churn_label'] = 1
+        self.df.loc[self.df['status'] == 0, 'churn_label'] = 0
+        self.df.loc[self.df['status'] == 1, 'churn_label'] = 0
 
         # Dropping
         cols_to_drop = ['churn_reason', 'city', 'latitutde', 'longitude', 'area_id']

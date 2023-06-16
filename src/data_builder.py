@@ -21,7 +21,6 @@ class DataBuilder:
         self.df = df
         self.build_train_test_set()
         self.perform_pca()
-        print(self.transformed_X_train.head())
 
 
     def build_train_test_set(self):
