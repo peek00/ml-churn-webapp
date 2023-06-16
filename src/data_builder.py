@@ -1,4 +1,5 @@
 from data_etl import DataETL
+from data_preprocessor import DataPreprocessor
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -27,12 +28,15 @@ class DataBuilder:
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y)
         class_counts = y_train.value_counts()
-        class_imbalance_ratio = class_counts[1] / class_counts[0]
-        print("Class Imbalance Ratio in Training Set:", class_imbalance_ratio)
+        print("Number of churned: ", class_counts[1])
+        print("Number of not churned: ", class_counts[0])
 
 if __name__ == "__main__":
     etl = DataETL()
     etl.use_local_data("research/data_given/")
     etl.join_tables()
 
-    db = DataBuilder(etl.get_df())
+    df = etl.get_df()
+    dp = DataPreprocessor(df)
+
+    db = DataBuilder(dp.get_df())

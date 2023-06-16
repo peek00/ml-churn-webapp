@@ -24,6 +24,9 @@ class DataPreprocessor:
         # pd.set_option('display.max_columns', None)  # None will display all columns
         # print(self.df.head())
 
+    def get_df(self)->pd.DataFrame:
+        return self.df
+
     def __validate_df(self):
         """
         Validate that df is not empty and all columns are in place
@@ -93,6 +96,8 @@ class DataPreprocessor:
         # Dropping
         cols_to_drop = ['churn_reason', 'city', 'latitutde', 'longitude', 'area_id']
         self.df = self.df.drop(cols_to_drop, axis=1)
+
+        # print(self.df['churn_label'].value_counts())
         
 
     def __label_encode(self, col:pd.Series)->pd.Series:
