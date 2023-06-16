@@ -32,8 +32,6 @@ class DataBuilder:
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2, stratify=y)
         class_counts = self.y_train.value_counts()
-        print("Number of churned: ", class_counts[1])
-        print("Number of not churned: ", class_counts[0])
 
     def perform_pca(self, n_components:int=5)->pd.DataFrame:
         """

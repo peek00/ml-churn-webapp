@@ -44,18 +44,17 @@ class XGBoost(Model):
         y = y.astype(int)
         kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
         scores = []
+        count = 1
         for train_index, val_index in kf.split(X):
             X_train, X_val = X.iloc[train_index], X.iloc[val_index]  # Updated indexing
             y_train, y_val = y.iloc[train_index], y.iloc[val_index]  # Updated indexing
-            print(f"Y_train is {y_train.value_counts()}")
-            print(f"Null for y_train is {y_train.isna().sum()}")
-            print(f"Y_val is {y_val.value_counts()}")
-            print(f"Null for y_val is {y_val.isna().sum()}")
             self.model.fit(X_train, y_train)
 
             # Evaluate the model on the validation set
             val_score = self.model.score(X_val, y_val)
             scores.append(val_score)
+            print(f"Validation score for split {count}: {val_score}")
+            count += 1
         
         avg_score = np.mean(scores)
         print(f"Average validation score: {avg_score}")

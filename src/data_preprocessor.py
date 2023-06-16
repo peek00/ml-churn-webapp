@@ -15,7 +15,6 @@ class DataPreprocessor:
         Assume that the table has been fully joined.
         """
         self.df = df
-        print(self.df.keys())
         self.scaler = MinMaxScaler()
         self.one_hot_encoder = OneHotEncoder()
         self.label_encoder = LabelEncoder()
