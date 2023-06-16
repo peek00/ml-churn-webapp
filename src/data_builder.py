@@ -3,6 +3,8 @@ from data_preprocessor import DataPreprocessor
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.decomposition import PCA
+
 class DataBuilder:
     """
     This code takes in the preprocessed and joined dataframe and is responsible for:
@@ -15,8 +17,11 @@ class DataBuilder:
         """
         Takes in the joined DF. 
         """
+        pd.set_option('display.max_columns', None)  # None will display all columns
         self.df = df
         self.build_train_test_set()
+        self.perform_pca()
+        print(self.transformed_X_train.head())
 
 
     def build_train_test_set(self):
@@ -26,10 +31,20 @@ class DataBuilder:
         X = self.df.drop('churn_label', axis=1)
         y = self.df['churn_label']
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y)
-        class_counts = y_train.value_counts()
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2, stratify=y)
+        class_counts = self.y_train.value_counts()
         print("Number of churned: ", class_counts[1])
         print("Number of not churned: ", class_counts[0])
+
+    def perform_pca(self, n_components:int=5)->pd.DataFrame:
+        """
+        Performs PCA on just the X_train and returns the top 5 features.
+        """
+        features = self.X_train.drop(columns=['status', 'customer_id', 'account_id', 'zip_code'])  # Replace 'target' with your churn_label variable column name
+        self.pca = PCA(n_components=n_components)
+        transformed_features = self.pca.fit_transform(features)
+        self.transformed_X_train = pd.DataFrame(data=transformed_features, columns=[f"PC{i+1}" for i in range(n_components)])
+        return self.transformed_X_train
 
 if __name__ == "__main__":
     etl = DataETL()
@@ -40,3 +55,4 @@ if __name__ == "__main__":
     dp = DataPreprocessor(df)
 
     db = DataBuilder(dp.get_df())
+    
