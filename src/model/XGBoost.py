@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 import xgboost as xgb
-import joblib
 from sklearn.model_selection import KFold
 import numpy as np
+import pickle
 
 class Model(ABC):
     '''
@@ -66,10 +66,14 @@ class XGBoost(Model):
         return self.model.predict_proba(X)[:,1]
     
     def load(self):
-        pass
+        with open('model.pkl', 'rb') as file:
+            self.model = pickle.load(file)
+            print("Model loaded successfully")
 
     def save(self):
-        pass
+        with open('model.pk1', 'wb') as file:
+            pickle.dump(self.model, file)
+            print("Model saved successfully")
     
 
 if __name__ == "__main__":
