@@ -45,6 +45,21 @@ class DataBuilder:
         transformed_features = self.pca.fit_transform(features)
         self.transformed_X_train = pd.DataFrame(data=transformed_features, columns=[f"PC{i+1}" for i in range(n_components)])
         return self.transformed_X_train
+    
+    def get_transformed_X_train(self)->pd.DataFrame:
+        return self.transformed_X_train
+    
+    def get_y_train(self)->pd.Series:
+        return self.y_train
+    
+    def get_transformed_X_test(self)->pd.DataFrame:
+        # Apply PCA using 
+        features = self.X_test.drop(columns=['status', 'customer_id', 'account_id', 'zip_code'])  # Replace 'target' with your churn_label variable column name
+        self.transformed_X_test = self.pca.transform(features)
+        return self.transformed_X_test
+    
+    def get_y_test(self)->pd.Series:
+        return self.y_test
 
 if __name__ == "__main__":
     etl = DataETL()
