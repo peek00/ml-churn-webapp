@@ -2,6 +2,7 @@ import pandas as pd
 from category_encoders import BinaryEncoder
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, MinMaxScaler
 from typing import Optional
+import pickle
 
 from data_etl import DataETL
 
@@ -20,11 +21,13 @@ class DataPreprocessor:
         self.label_encoder = LabelEncoder()
         # self._validate_df()
         self.__preprocess()
+        
         # pd.set_option('display.max_columns', None)  # None will display all columns
         # print(self.df.head())
 
     def get_df(self)->pd.DataFrame:
         return self.df
+    
 
     def __validate_df(self):
         """
@@ -107,7 +110,7 @@ class DataPreprocessor:
         """
         Map common values to numerical values. Provide custom mapping if required.
         """
-        mapping = {
+        self.mapping = {
             "Yes": 1,
             "No": 0,
             "Male": 1,
@@ -118,7 +121,7 @@ class DataPreprocessor:
         }
         if custom_mapping:
             return col.map(custom_mapping)
-        return col.map(mapping)
+        return col.map(self.mapping)
     
     def __binary_encode(self, col:pd.Series)->pd.Series:
         """
@@ -152,8 +155,22 @@ class DataPreprocessor:
         """
         nan_count = self.df.isna().sum().to_dict()
         return nan_count
+    
+    def save(self):
+        """
+        Saves the PCA and scaling objects along with any other relevant information.
+        """
+        # Save PCA object
+        # Save scaling object
+        with open('minmax_scaler.pkl', 'wb') as file:
+            pickle.dump(self.scaler, file)
+        with open('one_hot_encoder.pkl', 'wb') as file:
+            pickle.dump(self.one_hot_encoder, file)
+        with open('label_encoder.pkl', 'wb') as file:
+            pickle.dump(self.label_encoder, file)
+        with open('categorical_mapping.pkl', 'wb') as file:
+            pickle.dump(self.mapping, file)
 
-        
     
 if __name__ == "__main__":
     # Building ETL Object
@@ -166,5 +183,6 @@ if __name__ == "__main__":
     dp = DataPreprocessor(df)
     dp.df.head()
     print(dp.get_NaN_count())
+    dp.save()
  
 

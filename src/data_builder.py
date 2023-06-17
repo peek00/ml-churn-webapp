@@ -1,5 +1,6 @@
 from data_etl import DataETL
 from data_preprocessor import DataPreprocessor
+import pickle
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -21,6 +22,7 @@ class DataBuilder:
         self.df = df
         self.build_train_test_set()
         self.perform_pca()
+        self.save()
 
 
     def build_train_test_set(self):
@@ -57,6 +59,14 @@ class DataBuilder:
     
     def get_y_test(self)->pd.Series:
         return self.y_test
+    
+    def save(self):
+        """
+        Saves pca object to pickle file.
+        """
+        with open('pca.pkl', 'wb') as file:
+            pickle.dump(self.pca, file)
+        print("Saved PCA object to pickle file.")
 
 if __name__ == "__main__":
     etl = DataETL()
