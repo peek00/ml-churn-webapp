@@ -8,69 +8,13 @@ from pathlib import Path
 import os
 import pandas as pd
 
+from backend_data_preprocessor import DataPreprocessor
 
 
 app = Flask(__name__)
 
-def load_encoders(dir: Path = "preprocess"):
-    min_max_scaler_path = os.path.join(dir, "minmax_scaler.pkl")
-    label_encoder_path = os.path.join(dir,"label_encoder.pkl")
-    categorical_mapping_path = os.path.join(dir,"categorical_mapping.pkl")
+def load_pca(dir: Path = "preprocess"):
     pca_path = os.path.join(dir,"pca.pkl")
-    binary_encoder_path = os.path.join(dir,"binary_encoder.pkl")
-
-    internet_type_ohe_path = os.path.join(dir,"internet_type_ohe.pkl")
-    payment_method_ohe_path = os.path.join(dir,"payment_method_ohe.pkl")
-    try:
-        with open(min_max_scaler_path, 'rb') as file:
-            min_max_scaler = pickle.load(file)
-    except FileNotFoundError:
-        print(f"Min-max scaler file not found: {min_max_scaler_path}")
-        min_max_scaler = None
-    except pickle.UnpicklingError:
-        print(f"Error: Failed to unpickle min-max scaler file: {min_max_scaler_path}")
-        min_max_scaler = None
-
-    try:
-        with open(internet_type_ohe_path, 'rb') as file:
-            internet_type_ohe = pickle.load(file)
-    except FileNotFoundError:
-        print(f"One-hot encoder file not found: {internet_type_ohe_path}")
-        internet_type_ohe = None
-    except pickle.UnpicklingError:
-        print(f"Error: Failed to unpickle one-hot encoder file: {internet_type_ohe_path}")
-        internet_type_ohe = None
-
-    try:
-        with open(payment_method_ohe_path, 'rb') as file:
-            payment_method_ohe = pickle.load(file)
-    except FileNotFoundError:
-        print(f"One-hot encoder file not found: {payment_method_ohe_path}")
-        payment_method_ohe = None
-    except pickle.UnpicklingError:
-        print(f"Error: Failed to unpickle one-hot encoder file: {payment_method_ohe_path}")
-        payment_method_ohe = None
-
-    try:
-        with open(label_encoder_path, 'rb') as file:
-            label_encoder = pickle.load(file)
-    except FileNotFoundError:
-        print(f"Label encoder file not found: {label_encoder_path}")
-        label_encoder = None
-    except pickle.UnpicklingError:
-        print(f"Error: Failed to unpickle label encoder file: {label_encoder_path}")
-        label_encoder = None
-
-    try:
-        with open(categorical_mapping_path, 'rb') as file:
-            categorical_mapping = pickle.load(file)
-    except FileNotFoundError:
-        print(f"Categorical mapping file not found: {categorical_mapping_path}")
-        categorical_mapping = None
-    except pickle.UnpicklingError:
-        print(f"Error: Failed to unpickle categorical mapping file: {categorical_mapping_path}")
-        categorical_mapping = None
-
     try:
         with open(pca_path, 'rb') as file:
             pca = pickle.load(file)
@@ -81,17 +25,7 @@ def load_encoders(dir: Path = "preprocess"):
         print(f"Error: Failed to unpickle pca mapping file: {pca_path}")
         pca = None
 
-    try:
-        with open(binary_encoder_path, 'rb') as file:
-            binary_encoder = pickle.load(file)
-    except FileNotFoundError:
-        print(f"Binary_encoder file not found: {binary_encoder_path}")
-        binary_encoder = None
-    except pickle.UnpicklingError:
-        print(f"Error: Failed to unpickle binary_encoder mapping file: {binary_encoder_path}")
-        binary_encoder = None
-
-    return min_max_scaler, internet_type_ohe, payment_method_ohe , label_encoder, categorical_mapping, binary_encoder, pca
+    return pca
 
 def preprocess_categorical(df:pd.DataFrame, mapping:dict)-> pd.DataFrame:
     expected_columns = [
@@ -153,54 +87,71 @@ def preprocess_one_hot_encoding(df:pd.DataFrame, col_name:str, ohe:OneHotEncoder
     df.drop(columns=[col_name], inplace=True)
     df = pd.concat([df, ohe_df], axis=1)
     return df
-    for column in expected_columns:
-            # Reshape input data to 2D format if needed
-        col_reshaped = df[column].values.reshape(-1, 1)
 
-        # Use the fitted OneHotEncoder object to transform the data
-        csr_ohe_features = ohe.transform(col_reshaped)
-        ohe_df = pd.DataFrame.sparse.from_spmatrix(csr_ohe_features)
-
-        # Assign column names based on the encoder categories
-        ohe_df.columns = ohe.categories_[0]
-        print(ohe_df.head())
-        print(column)
-        print(df)
-        print(df[column].head())
-        df.drop(columns=[column], inplace=True)
-        # df = pd.concat([df, ohe_output], axis=1)
-    
+def preprocess_churn_labels(df:pd.DataFrame)->pd.DataFrame:
+    # Fixing churn_labels
+    df.loc[df['status'] == 2, 'churn_label'] = 1
+    df.loc[df['status'] == 0, 'churn_label'] = 0
+    df.loc[df['status'] == 1, 'churn_label'] = 0
     return df
 
+def preprocess_input(data:dict, dir:Path="preprocess"):
+    data_processer = DataPreprocessor()
+    input_df = pd.DataFrame.from_dict(data, orient='index').transpose()
+    parsed_input = data_processer.preprocess_input(input_df)
+    # Doing PCA
+    pca = load_pca(dir)
+    cols_to_drop = [ 'churn_label', 'status','customer_id', 'account_id', 'zip_code']
+    for column in cols_to_drop:
+        assert column in parsed_input.columns, f"Column '{column}' does not exist in the DataFrame."
+    parsed_input = parsed_input.drop(cols_to_drop, axis=1)
 
+    # Fit pca
+    transformed_features = pca.transform(parsed_input)
+    print(transformed_features)
+    return 1
+    # try:
+    #     # Load encoders
+    #     min_max_scaler, internet_type_ohe, payment_method_ohe, label_encoder, categorical_mapping, binary_encoder, pca = load_encoders()
+    #     # Convert data from JSON into panda.df
+    #     input_df = pd.DataFrame.from_dict(data, orient='index').transpose()
 
-def preprocess_input(data:dict):
-    try:
-        # Load encoders
-        min_max_scaler, internet_type_ohe, payment_method_ohe, label_encoder, categorical_mapping, binary_encoder, pca = load_encoders()
-        # Convert data from JSON into panda.df
-        input_df = pd.DataFrame.from_dict(data, orient='index').transpose()
+    #     # Preprocess categorical data
+    #     input_df = preprocess_categorical(input_df, categorical_mapping)
+    #     input_df = preprocess_numerical(input_df, min_max_scaler)
+    #     input_df = preprocess_label_and_binary(input_df, label_encoder, binary_encoder)
+    #     input_df = preprocess_one_hot_encoding(input_df, "internet_type", internet_type_ohe)
+    #     input_df = preprocess_one_hot_encoding(input_df, "payment_method", payment_method_ohe)
+    #     input_df = preprocess_churn_labels(input_df)
 
-        # Preprocess categorical data
-        input_df = preprocess_categorical(input_df, categorical_mapping)
-        input_df = preprocess_numerical(input_df, min_max_scaler)
-        input_df = preprocess_label_and_binary(input_df, label_encoder, binary_encoder)
-        print("Error here")
-        input_df = preprocess_one_hot_encoding(input_df, "internet_type", internet_type_ohe)
-        input_df = preprocess_one_hot_encoding(input_df, "payment_method", payment_method_ohe)
-        print(input_df.head())
+    #     # Dropping
+    #     cols_to_drop = ['churn_reason', 'churn_label', 'city', 'latitutde', 'longitude', 'area_id', 'status','customer_id', 'account_id', 'zip_code']
+    #     for column in cols_to_drop:
+    #         assert column in input_df.columns, f"Column '{column}' does not exist in the DataFrame."
+    #     input_df = input_df.drop(cols_to_drop, axis=1)
+    #     # input_df[float('nan')] = input_df['nan'].astype(str)
+    #     # input_df.drop(columns=[float('nan')], inplace=True)
+    #     input_df.columns = input_df.columns.astype(str)
+    #     input_df.drop(columns=['nan'], inplace=True)
+
+    #     for _ in input_df.columns:
+    #         print(type(_), _)
+    #     print(input_df.head())
+    #     # Fit pca
+    #     transformed_features = pca.transform(input_df)
+    #     print(transformed_features.head())
 
 
     
 
-    except Exception as e:
-        print(e)
-        print("Failed to load encoders!")
+    # except Exception as e:
+    #     print(e)
+    #     print("Failed to load encoders!")
     
     
-    # Your preprocessing logic goes here
+    # # Your preprocessing logic goes here
     
-    return data
+    # return data
 
 # GET endpoint
 @app.route('/',  methods=['GET'])
