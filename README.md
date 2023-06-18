@@ -13,3 +13,9 @@ To Do
 
 - Finish up flask preprocess
 - 
+
+---
+# Takeaways
+
+* Same min-max scaler object can be used for multiple columns
+* One hot encoding requires different object for different columns
