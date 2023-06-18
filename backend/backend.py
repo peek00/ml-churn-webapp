@@ -141,8 +141,14 @@ def get_prediction():
     model_path = "model/model.pkl"
     with open(model_path, 'rb') as file:
         model = pickle.load(file)
-    
+    # values = [[-1.240957, -0.914264, 0.437043, -0.800090, 0.421031]]
+    # my_array = np.array(values)
+    # print(f"PCA values are: {processed_input}")
+    # print(f"PCA values are: {my_array}")
     predictions = model.predict(processed_input)
+    # predictions = model.predict(my_array)
+
+    print(predictions)
     return {
         "prediction": int(predictions[0].astype(int))
     }
