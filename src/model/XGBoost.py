@@ -4,6 +4,10 @@ from sklearn.model_selection import KFold
 import numpy as np
 import pickle
 
+from data_etl import DataETL
+from data_preprocessor import DataPreprocessor
+from data_builder import DataBuilder
+
 class Model(ABC):
     '''
       Interface used for CatBoostModel.
@@ -71,7 +75,7 @@ class XGBoost(Model):
             print("Model loaded successfully")
 
     def save(self):
-        with open('model.pk1', 'wb') as file:
+        with open('model.pkl', 'wb') as file:
             pickle.dump(self.model, file)
             print("Model saved successfully")
     

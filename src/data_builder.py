@@ -33,6 +33,10 @@ class DataBuilder:
         y = self.df['churn_label']
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2, stratify=y)
+        self.X_train = self.X_train.reset_index(drop=True)
+        self.X_test = self.X_test.reset_index(drop=True)
+        self.y_train = self.y_train.reset_index(drop=True)
+        self.y_test = self.y_test.reset_index(drop=True)
         class_counts = self.y_train.value_counts()
 
     def perform_pca(self, n_components:int=5)->pd.DataFrame:
@@ -68,6 +72,18 @@ class DataBuilder:
             pickle.dump(self.pca, file)
         print("Saved PCA object to pickle file.")
 
+    def get_negative(self):
+        # Filter the transformed X_train based on churn_label = 0
+        print(len(self.y_train))
+        print(len(self.X_train))
+        churn_0_indices = self.y_train[self.y_train == 0].index
+        print(churn_0_indices)
+        churn_0_rows = self.transformed_X_train.iloc[churn_0_indices].head(5)
+        
+        # Print the churn_label = 0 rows
+        print(churn_0_rows)
+
+
 if __name__ == "__main__":
     etl = DataETL()
     etl.use_local_data("research/data_given/")
@@ -77,4 +93,4 @@ if __name__ == "__main__":
     dp = DataPreprocessor(df)
 
     db = DataBuilder(dp.get_df())
-    
+    db.get_negative()
