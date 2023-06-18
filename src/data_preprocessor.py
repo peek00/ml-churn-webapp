@@ -128,9 +128,9 @@ class DataPreprocessor:
         Returns a pd.Df that has to be concatted to the main df using the following:
         output_df = pd.concat([output_df, return_value], axis=1)
         """
-        binary_encoder = BinaryEncoder(cols=['churn_category'])
-        binary_encoder.fit_transform(col)
-        churn_cat = binary_encoder.transform(col)
+        self.binary_encoder = BinaryEncoder(cols=['churn_category'])
+        self.binary_encoder.fit_transform(col)
+        churn_cat = self.binary_encoder.transform(col)
         return churn_cat
     
     def __scale_numerical(self,col:pd.Series)->pd.Series:
@@ -146,7 +146,16 @@ class DataPreprocessor:
         One hot encodes a categorical column using the same encoder object associated with this class.
         Returns the result as a DataFrame.
         """
-        oh_encoded = pd.get_dummies(col)
+        self.one_hot_encoder.fit(col.values.reshape(-1, 1))
+        csr_ohe_features = self.one_hot_encoder.transform(col.values.reshape(-1, 1))
+        ohe_df = pd.DataFrame.sparse.from_spmatrix(csr_ohe_features)
+
+        # Assign column names based on the encoder categories
+        ohe_df.columns = self.one_hot_encoder.categories_[0]
+
+        return ohe_df
+        
+        # oh_encoded = pd.get_dummies(col)
         return oh_encoded
     
     def get_NaN_count(self)->dict:
@@ -170,6 +179,8 @@ class DataPreprocessor:
             pickle.dump(self.label_encoder, file)
         with open('categorical_mapping.pkl', 'wb') as file:
             pickle.dump(self.mapping, file)
+        with open('binary_encoder.pkl', 'wb') as file:
+            pickle.dump(self.binary_encoder, file)
 
     
 if __name__ == "__main__":

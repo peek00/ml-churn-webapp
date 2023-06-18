@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import joblib
 import numpy as np
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, MinMaxScaler
+from category_encoders import BinaryEncoder
 import pickle
 from pathlib import Path
 import os
@@ -17,6 +18,7 @@ def load_encoders(dir: Path = "preprocess"):
     label_encoder_path = os.path.join(dir,"label_encoder.pkl")
     categorical_mapping_path = os.path.join(dir,"categorical_mapping.pkl")
     pca_path = os.path.join(dir,"pca.pkl")
+    binary_encoder_path = os.path.join(dir,"binary_encoder.pkl")
     try:
         with open(min_max_scaler_path, 'rb') as file:
             min_max_scaler = pickle.load(file)
@@ -67,7 +69,17 @@ def load_encoders(dir: Path = "preprocess"):
         print(f"Error: Failed to unpickle pca mapping file: {pca_path}")
         pca = None
 
-    return min_max_scaler, one_hot_encoder, label_encoder, categorical_mapping, pca
+    try:
+        with open(binary_encoder_path, 'rb') as file:
+            binary_encoder = pickle.load(file)
+    except FileNotFoundError:
+        print(f"Binary_encoder file not found: {binary_encoder_path}")
+        binary_encoder = None
+    except pickle.UnpicklingError:
+        print(f"Error: Failed to unpickle binary_encoder mapping file: {binary_encoder_path}")
+        binary_encoder = None
+
+    return min_max_scaler, one_hot_encoder, label_encoder, categorical_mapping, binary_encoder, pca
 
 def preprocess_categorical(df:pd.DataFrame, mapping:dict)-> pd.DataFrame:
     expected_columns = [
@@ -85,29 +97,73 @@ def preprocess_categorical(df:pd.DataFrame, mapping:dict)-> pd.DataFrame:
         df[column] = df[column].map(mapping)
     return df
 
+def preprocess_numerical(df:pd.DataFrame, scaler:MinMaxScaler)-> pd.DataFrame:
+    expected_columns = [
+        'num_referrals', 
+        'age',
+        'tenure_months',
+        'avg_long_distance_fee_monthly',
+        'total_long_distance_fee',
+        'avg_gb_download_monthly',
+        'total_monthly_fee',
+        'total_charges_quarter',
+        'total_refunds',
+        'population'
+    ]
+
+    for column in expected_columns:
+        assert column in df.columns, f"Column '{column}' does not exist in the DataFrame."
+    
+    for column in expected_columns:
+        df[column] = scaler.transform(df[column].values.reshape(-1,1))
+
+    return df
+
+def preprocess_label_and_binary(df:pd.DataFrame, label_encoder:LabelEncoder, binary_encoder: BinaryEncoder)-> pd.DataFrame:
+    # Label encoding
+    assert "status" in df.columns, "Column 'status' does not exist in the DataFrame."
+    df['status'] = label_encoder.transform(df['status'])
+    print("Below")
+    # Binary encoding
+    assert "churn_category" in df.columns, "Column 'churn_category' does not exist in the DataFrame."
+    churn_cat = binary_encoder.transform(df['churn_category'])
+    df.drop(columns=['churn_category'], inplace=True)
+    df= pd.concat([df, churn_cat], axis=1)
+
+    return df
+
+def preprocess_one_hot_encoding(df:pd.DataFrame, ohe:OneHotEncoder)->pd.DataFrame:
+    expected_columns = [
+        'payment_method',
+        'internet_type',
+    ]
+    for column in expected_columns:
+        assert column in df.columns, f"Column '{column}' does not exist in the DataFrame."
+    for column in expected_columns:
+        ohe_output = ohe.transform(df[column])
+        df.drop(columns=[column], inplace=True)
+        df = pd.concat([df, ohe_output], axis=1)
+    
+    return df
+
+
 
 def preprocess_input(data:dict):
     try:
         # Load encoders
-        min_max_scaler, one_hot_encoder, label_encoder, categorical_mapping, pca = load_encoders()
+        min_max_scaler, one_hot_encoder, label_encoder, categorical_mapping, binary_encoder, pca = load_encoders()
         # Convert data from JSON into panda.df
         input_df = pd.DataFrame.from_dict(data, orient='index').transpose()
 
         # Preprocess categorical data
         input_df = preprocess_categorical(input_df, categorical_mapping)
+        input_df = preprocess_numerical(input_df, min_max_scaler)
+        input_df = preprocess_label_and_binary(input_df, label_encoder, binary_encoder)
+        print("Error here")
+        input_df = preprocess_one_hot_encoding(input_df, one_hot_encoder)
         print(input_df.head())
 
-        # Drop cols if exists
-        columns_to_drop = ['status', 'customer_id', 'account_id', 'zip_code']
-        existing_columns = list(filter(lambda col: col in data.columns, columns_to_drop))
-        print(existing_columns)
-        if existing_columns:
-            features = data.drop(columns=existing_columns)
-            # Load pca
 
-        else:
-            features = data.copy()
-            return input_df
     
 
     except Exception as e:
