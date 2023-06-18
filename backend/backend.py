@@ -108,50 +108,8 @@ def preprocess_input(data:dict, dir:Path="preprocess"):
 
     # Fit pca
     transformed_features = pca.transform(parsed_input)
-    print(transformed_features)
-    return 1
-    # try:
-    #     # Load encoders
-    #     min_max_scaler, internet_type_ohe, payment_method_ohe, label_encoder, categorical_mapping, binary_encoder, pca = load_encoders()
-    #     # Convert data from JSON into panda.df
-    #     input_df = pd.DataFrame.from_dict(data, orient='index').transpose()
+    return transformed_features
 
-    #     # Preprocess categorical data
-    #     input_df = preprocess_categorical(input_df, categorical_mapping)
-    #     input_df = preprocess_numerical(input_df, min_max_scaler)
-    #     input_df = preprocess_label_and_binary(input_df, label_encoder, binary_encoder)
-    #     input_df = preprocess_one_hot_encoding(input_df, "internet_type", internet_type_ohe)
-    #     input_df = preprocess_one_hot_encoding(input_df, "payment_method", payment_method_ohe)
-    #     input_df = preprocess_churn_labels(input_df)
-
-    #     # Dropping
-    #     cols_to_drop = ['churn_reason', 'churn_label', 'city', 'latitutde', 'longitude', 'area_id', 'status','customer_id', 'account_id', 'zip_code']
-    #     for column in cols_to_drop:
-    #         assert column in input_df.columns, f"Column '{column}' does not exist in the DataFrame."
-    #     input_df = input_df.drop(cols_to_drop, axis=1)
-    #     # input_df[float('nan')] = input_df['nan'].astype(str)
-    #     # input_df.drop(columns=[float('nan')], inplace=True)
-    #     input_df.columns = input_df.columns.astype(str)
-    #     input_df.drop(columns=['nan'], inplace=True)
-
-    #     for _ in input_df.columns:
-    #         print(type(_), _)
-    #     print(input_df.head())
-    #     # Fit pca
-    #     transformed_features = pca.transform(input_df)
-    #     print(transformed_features.head())
-
-
-    
-
-    # except Exception as e:
-    #     print(e)
-    #     print("Failed to load encoders!")
-    
-    
-    # # Your preprocessing logic goes here
-    
-    # return data
 
 # GET endpoint
 @app.route('/',  methods=['GET'])
@@ -177,8 +135,17 @@ def get_prediction():
 
     # Get the data from the request
     data = request.get_json()
-    preprocess_input(data)
+    processed_input = preprocess_input(data)
 
+    # Load model
+    model_path = "model/model.pkl"
+    with open(model_path, 'rb') as file:
+        model = pickle.load(file)
+    
+    predictions = model.predict(processed_input)
+    return {
+        "prediction": int(predictions[0].astype(int))
+    }
     # Make predictions using the loaded model
     # predictions = model.predict(input_data)
 
