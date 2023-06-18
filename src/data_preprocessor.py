@@ -17,7 +17,7 @@ class DataPreprocessor:
         """
         self.df = df
         self.scaler = MinMaxScaler()
-        self.one_hot_encoder = OneHotEncoder()
+        # self.one_hot_encoder = OneHotEncoder()
         self.label_encoder = LabelEncoder()
         # self._validate_df()
         self.__preprocess()
@@ -146,12 +146,16 @@ class DataPreprocessor:
         One hot encodes a categorical column using the same encoder object associated with this class.
         Returns the result as a DataFrame.
         """
-        self.one_hot_encoder.fit(col.values.reshape(-1, 1))
-        csr_ohe_features = self.one_hot_encoder.transform(col.values.reshape(-1, 1))
+        one_hot_encoder = OneHotEncoder()
+        one_hot_encoder.fit(col.values.reshape(-1, 1))
+        csr_ohe_features = one_hot_encoder.transform(col.values.reshape(-1, 1))
         ohe_df = pd.DataFrame.sparse.from_spmatrix(csr_ohe_features)
 
         # Assign column names based on the encoder categories
-        ohe_df.columns = self.one_hot_encoder.categories_[0]
+        ohe_df.columns = one_hot_encoder.categories_[0]
+
+        with open(f'{col.name}_ohe.pkl', 'wb') as file:
+            pickle.dump(one_hot_encoder, file)
 
         return ohe_df
         
@@ -173,14 +177,13 @@ class DataPreprocessor:
         # Save scaling object
         with open('minmax_scaler.pkl', 'wb') as file:
             pickle.dump(self.scaler, file)
-        with open('one_hot_encoder.pkl', 'wb') as file:
-            pickle.dump(self.one_hot_encoder, file)
         with open('label_encoder.pkl', 'wb') as file:
             pickle.dump(self.label_encoder, file)
         with open('categorical_mapping.pkl', 'wb') as file:
             pickle.dump(self.mapping, file)
         with open('binary_encoder.pkl', 'wb') as file:
             pickle.dump(self.binary_encoder, file)
+        print("Pickle objects")
 
     
 if __name__ == "__main__":

@@ -14,11 +14,13 @@ app = Flask(__name__)
 
 def load_encoders(dir: Path = "preprocess"):
     min_max_scaler_path = os.path.join(dir, "minmax_scaler.pkl")
-    one_hot_encoder_path = os.path.join(dir, "one_hot_encoder.pkl")
     label_encoder_path = os.path.join(dir,"label_encoder.pkl")
     categorical_mapping_path = os.path.join(dir,"categorical_mapping.pkl")
     pca_path = os.path.join(dir,"pca.pkl")
     binary_encoder_path = os.path.join(dir,"binary_encoder.pkl")
+
+    internet_type_ohe_path = os.path.join(dir,"internet_type_ohe.pkl")
+    payment_method_ohe_path = os.path.join(dir,"payment_method_ohe.pkl")
     try:
         with open(min_max_scaler_path, 'rb') as file:
             min_max_scaler = pickle.load(file)
@@ -30,14 +32,24 @@ def load_encoders(dir: Path = "preprocess"):
         min_max_scaler = None
 
     try:
-        with open(one_hot_encoder_path, 'rb') as file:
-            one_hot_encoder = pickle.load(file)
+        with open(internet_type_ohe_path, 'rb') as file:
+            internet_type_ohe = pickle.load(file)
     except FileNotFoundError:
-        print(f"One-hot encoder file not found: {one_hot_encoder_path}")
-        one_hot_encoder = None
+        print(f"One-hot encoder file not found: {internet_type_ohe_path}")
+        internet_type_ohe = None
     except pickle.UnpicklingError:
-        print(f"Error: Failed to unpickle one-hot encoder file: {one_hot_encoder_path}")
-        one_hot_encoder = None
+        print(f"Error: Failed to unpickle one-hot encoder file: {internet_type_ohe_path}")
+        internet_type_ohe = None
+
+    try:
+        with open(payment_method_ohe_path, 'rb') as file:
+            payment_method_ohe = pickle.load(file)
+    except FileNotFoundError:
+        print(f"One-hot encoder file not found: {payment_method_ohe_path}")
+        payment_method_ohe = None
+    except pickle.UnpicklingError:
+        print(f"Error: Failed to unpickle one-hot encoder file: {payment_method_ohe_path}")
+        payment_method_ohe = None
 
     try:
         with open(label_encoder_path, 'rb') as file:
@@ -79,7 +91,7 @@ def load_encoders(dir: Path = "preprocess"):
         print(f"Error: Failed to unpickle binary_encoder mapping file: {binary_encoder_path}")
         binary_encoder = None
 
-    return min_max_scaler, one_hot_encoder, label_encoder, categorical_mapping, binary_encoder, pca
+    return min_max_scaler, internet_type_ohe, payment_method_ohe , label_encoder, categorical_mapping, binary_encoder, pca
 
 def preprocess_categorical(df:pd.DataFrame, mapping:dict)-> pd.DataFrame:
     expected_columns = [
@@ -123,7 +135,6 @@ def preprocess_label_and_binary(df:pd.DataFrame, label_encoder:LabelEncoder, bin
     # Label encoding
     assert "status" in df.columns, "Column 'status' does not exist in the DataFrame."
     df['status'] = label_encoder.transform(df['status'])
-    print("Below")
     # Binary encoding
     assert "churn_category" in df.columns, "Column 'churn_category' does not exist in the DataFrame."
     churn_cat = binary_encoder.transform(df['churn_category'])
@@ -132,17 +143,32 @@ def preprocess_label_and_binary(df:pd.DataFrame, label_encoder:LabelEncoder, bin
 
     return df
 
-def preprocess_one_hot_encoding(df:pd.DataFrame, ohe:OneHotEncoder)->pd.DataFrame:
-    expected_columns = [
-        'payment_method',
-        'internet_type',
-    ]
+def preprocess_one_hot_encoding(df:pd.DataFrame, col_name:str, ohe:OneHotEncoder)->pd.DataFrame:
+    
+    assert col_name in df.columns, f"Column '{col_name}' does not exist in the DataFrame."
+    col_reshaped = df[col_name].values.reshape(-1, 1)
+    csr_ohe_features = ohe.transform(col_reshaped)
+    ohe_df = pd.DataFrame.sparse.from_spmatrix(csr_ohe_features)
+    ohe_df.columns = ohe.categories_[0]
+    df.drop(columns=[col_name], inplace=True)
+    df = pd.concat([df, ohe_df], axis=1)
+    return df
     for column in expected_columns:
-        assert column in df.columns, f"Column '{column}' does not exist in the DataFrame."
-    for column in expected_columns:
-        ohe_output = ohe.transform(df[column])
+            # Reshape input data to 2D format if needed
+        col_reshaped = df[column].values.reshape(-1, 1)
+
+        # Use the fitted OneHotEncoder object to transform the data
+        csr_ohe_features = ohe.transform(col_reshaped)
+        ohe_df = pd.DataFrame.sparse.from_spmatrix(csr_ohe_features)
+
+        # Assign column names based on the encoder categories
+        ohe_df.columns = ohe.categories_[0]
+        print(ohe_df.head())
+        print(column)
+        print(df)
+        print(df[column].head())
         df.drop(columns=[column], inplace=True)
-        df = pd.concat([df, ohe_output], axis=1)
+        # df = pd.concat([df, ohe_output], axis=1)
     
     return df
 
@@ -151,7 +177,7 @@ def preprocess_one_hot_encoding(df:pd.DataFrame, ohe:OneHotEncoder)->pd.DataFram
 def preprocess_input(data:dict):
     try:
         # Load encoders
-        min_max_scaler, one_hot_encoder, label_encoder, categorical_mapping, binary_encoder, pca = load_encoders()
+        min_max_scaler, internet_type_ohe, payment_method_ohe, label_encoder, categorical_mapping, binary_encoder, pca = load_encoders()
         # Convert data from JSON into panda.df
         input_df = pd.DataFrame.from_dict(data, orient='index').transpose()
 
@@ -160,7 +186,8 @@ def preprocess_input(data:dict):
         input_df = preprocess_numerical(input_df, min_max_scaler)
         input_df = preprocess_label_and_binary(input_df, label_encoder, binary_encoder)
         print("Error here")
-        input_df = preprocess_one_hot_encoding(input_df, one_hot_encoder)
+        input_df = preprocess_one_hot_encoding(input_df, "internet_type", internet_type_ohe)
+        input_df = preprocess_one_hot_encoding(input_df, "payment_method", payment_method_ohe)
         print(input_df.head())
 
 
