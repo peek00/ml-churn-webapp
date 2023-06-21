@@ -1,7 +1,7 @@
 from data_etl import DataETL
 from data_preprocessor import DataPreprocessor
 import pickle
-
+from imblearn.over_sampling import RandomOverSampler
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.decomposition import PCA
@@ -29,6 +29,7 @@ class DataBuilder:
         """
         Splits train and test set using stratified train-test split
         """
+
         X = self.df.drop('churn_label', axis=1)
         y = self.df['churn_label']
 
@@ -39,11 +40,15 @@ class DataBuilder:
         self.y_test = self.y_test.reset_index(drop=True)
         class_counts = self.y_train.value_counts()
 
+        # print(f"Class counts is: {class_counts}")
+
     def perform_pca(self, n_components:int=5)->pd.DataFrame:
         """
         Performs PCA on just the X_train and returns the top 5 features.
         """
         features = self.X_train.drop(columns=['status', 'customer_id', 'account_id', 'zip_code'])  # Replace 'target' with your churn_label variable column name
+        # print(f"I need this order: {features.columns}")
+        
         self.pca = PCA(n_components=n_components)
         transformed_features = self.pca.fit_transform(features)
         self.transformed_X_train = pd.DataFrame(data=transformed_features, columns=[f"PC{i+1}" for i in range(n_components)])
