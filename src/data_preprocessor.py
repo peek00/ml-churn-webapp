@@ -74,9 +74,9 @@ class DataPreprocessor:
         self.df['status'] = self.__label_encode(self.df['status'])
 
         # Binary encode
-        churn_df = self.__binary_encode(self.df['churn_category'])
-        assert not churn_df.empty, "Churn DF is empty!"
-        self.df = pd.concat([self.df, churn_df], axis=1)
+        # churn_df = self.__binary_encode(self.df['churn_category'])
+        # assert not churn_df.empty, "Churn DF is empty!"
+        # self.df = pd.concat([self.df, churn_df], axis=1)
         self.df.drop('churn_category', axis=1, inplace=True)
 
         # One hot encode
@@ -214,8 +214,8 @@ class DataPreprocessor:
             pickle.dump(self.label_encoder, file)
         with open('backend/preprocess/categorical_mapping.pkl', 'wb') as file:
             pickle.dump(self.mapping, file)
-        with open('backend/preprocess/binary_encoder.pkl', 'wb') as file:
-            pickle.dump(self.binary_encoder, file)
+        # with open('backend/preprocess/binary_encoder.pkl', 'wb') as file:
+        #     pickle.dump(self.binary_encoder, file)
         print("Pickle objects")
 
     
