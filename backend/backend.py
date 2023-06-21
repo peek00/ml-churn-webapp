@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import joblib
 import numpy as np
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, MinMaxScaler
@@ -39,12 +39,13 @@ def preprocess_input(data:dict, dir:Path="preprocess"):
     parsed_input = data_processer.preprocess_input(input_df)
     # Doing PCA
     pca = load_pca(dir)
-    cols_to_drop = [ 'churn_label', 'status','customer_id', 'account_id', 'zip_code']
-    for column in cols_to_drop:
-        assert column in parsed_input.columns, f"Column '{column}' does not exist in the DataFrame."
+    cols_to_drop = [ 'zip_code']
     parsed_input = parsed_input.drop(cols_to_drop, axis=1)
 
     # Fit pca
+    print(f"Processed order is {parsed_input.columns}")
+    print(parsed_input.columns[parsed_input.isna().any()].tolist())
+
     transformed_features = pca.transform(parsed_input)
     return transformed_features
 
@@ -52,8 +53,11 @@ def preprocess_input(data:dict, dir:Path="preprocess"):
 # GET endpoint
 @app.route('/',  methods=['GET'])
 def home():
+    """
+    Form page
+    """
     data = {'message': 'This is a GET request'}
-    return jsonify(data)
+    return render_template('index.html')
 
 # GET endpoint
 @app.route('/api/data', methods=['GET'])
@@ -64,13 +68,23 @@ def get_data():
 # POST endpoint
 @app.route('/predict', methods=['POST'])
 def get_prediction():
+    """
+    Redirected here with information from the form.
+    """
     # Load the saved model
     model_path = "model/model.pkl"
     model = joblib.load(model_path)
 
     # Get the data from the request
-    data = request.get_json()
+    data = {}
+    for key, value in request.form.items():
+        data[key] = value
+
+
+    # Use the JSON dictionary for prediction or further processing
+    
     processed_input = preprocess_input(data)
+    
 
     # Load model
     model_path = "model/model.pkl"
@@ -82,7 +96,6 @@ def get_prediction():
     # processed_input = np.array(values)
     predictions = model.predict(processed_input)
 
-    print(predictions)
     return {
         "prediction": int(predictions[0].astype(int))
     }

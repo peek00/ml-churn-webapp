@@ -9,7 +9,8 @@ import os
 
 class DataPreprocessor:
     """
-    Perform data cleaning steps on dataset.
+    Modified data preprocessor class to work on input data.
+    Certain 
     """
 
     def __init__(self):
@@ -17,20 +18,11 @@ class DataPreprocessor:
         Assume that the table has been fully joined.
         """
         self.load_encoders()
-        # self.df = df
-        # self.scaler = MinMaxScaler()
-        # # self.one_hot_encoder = OneHotEncoder()
-        # self.label_encoder = LabelEncoder()
-        # # self._validate_df()
-        # self.__preprocess()
-        
-        # pd.set_option('display.max_columns', None)  # None will display all columns
-        # print(self.df.head())
+
 
     def load_encoders(self, dir: Path = "preprocess"):
         current_path = os.path.join(os.getcwd(), dir)
         file_names = [
-            "binary_encoder.pkl",
             "mapping.pkl",
             "internet_type_ohe.pkl",
             "label_encoder.pkl",
@@ -95,15 +87,6 @@ class DataPreprocessor:
         self.df['total_refunds'] = self.__scale_numerical(self.df['total_refunds'], on_input=True)
         self.df['population'] = self.__scale_numerical(self.df['population'], on_input=True)
 
-        # Label encode 
-        self.df['status'] = self.__label_encode(self.df['status'])
-
-        # Binary encode
-        churn_df = self.__binary_encode(self.df['churn_category'], on_input=True)
-        assert not churn_df.empty, "Churn DF is empty!"
-        self.df = pd.concat([self.df, churn_df], axis=1)
-        self.df.drop('churn_category', axis=1, inplace=True)
-
         # One hot encode
         # Payment method
         ohe_payment_method = self.__one_hot_encode(self.df['payment_method'], self.payment_method_ohe, on_input=True)
@@ -122,19 +105,8 @@ class DataPreprocessor:
         self.df = self.df.drop('internet_type', axis=1)
         self.df.columns = self.df.columns.astype(str)
 
-
-        # Fixing churn_labels
-        self.df.loc[self.df['status'] == 2, 'churn_label'] = 1
-        self.df.loc[self.df['status'] == 0, 'churn_label'] = 0
-        self.df.loc[self.df['status'] == 1, 'churn_label'] = 0
-
-        # Dropping
-        cols_to_drop = ['churn_reason', 'city', 'latitutde', 'longitude', 'area_id']
-        self.df = self.df.drop(cols_to_drop, axis=1)
-
         return self.df
 
-        # print(self.df['churn_label'].value_counts())
     
     def __label_encode(self, col:pd.Series, on_input:bool=False)->pd.Series:
         if on_input:
