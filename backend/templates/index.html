@@ -9,52 +9,52 @@
 </head>
 <body>
     <h1>Customer Information</h1>
-  <form action="/process_form" method="POST">
+  <form action="/predict" method="POST">
     <div>
       <label for="gender">Gender:</label>
       <select id="gender">
+          <option value="Male" checked>Male</option>
         <option value="Female">Female</option>
-        <option value="Male">Male</option>
       </select>
     </div>
     <div>
       <label for="age">Age:</label>
-      <input type="number" id="age" name="age">
+      <input type="number" id="age" name="age" value="16">
     </div>
     <div>
       <label for="senior_citizen">Senior Citizen:</label>
       <select id="senior_citizen">
         <option value="Yes">Yes</option>
-        <option value="No">No</option>
+        <option value="No" checked>No</option>
       </select>
     </div>
     <div>
       <label for="married">Married:</label>
       <select id="married">
         <option value="Yes">Yes</option>
-        <option value="No">No</option>
+        <option value="No" checked>No</option>
       </select>
     </div>
     <div>
       <label for="num_dependents">Number of Dependents:</label>
-      <input type="number" id="num_dependents" name="num_dependents">
+      <input type="number" id="num_dependents" name="num_dependents" value="0">
     </div>
     <div>
       <label for="zip_code">Zip Code:</label>
-      <input type="number" id="zip_code" name="zip_code">
+      <input type="number" id="zip_code" name="zip_code" value="123456">
     </div>
     <div>
       <label for="tenure_months">Tenure (in months):</label>
-      <input type="number" id="tenure_months" name="tenure_months">
+      <input type="number" id="tenure_months" name="tenure_months" value="16">
     </div>
     <div>
       <label for="num_referrals">Number of Referrals:</label>
-      <input type="number" id="num_referrals" name="num_referrals">
+      <input type="number" id="num_referrals" name="num_referrals" value="0">
     </div>
     <div>
       <label for="has_internet_service">Has Internet Service:</label>
       <select id="has_internet_service">
-        <option value="Yes">Yes</option>
+        <option value="Yes" checked>Yes</option>
         <option value="No">No</option>
       </select>
     </div>
@@ -62,21 +62,22 @@
       <label for="internet_type">Internet Type:</label>
       <select id="internet_type">
         <option value="Cable">Cable</option>
-        <option value="Fibre Optic">Fibre Optic</option>
+        <option value="Fibre Optic" checked>Fibre Optic</option>
         <option value="DSL">DSL</option>
+        <option value="nan">nan</option>
       </select>
     </div>
     <div>
       <label for="has_unlimited_data">Has Unlimited Data:</label>
       <select id="has_unlimited_data">
-        <option value="Yes">Yes</option>
+        <option value="Yes" checked>Yes</option>
         <option value="No">No</option>
       </select>    
     </div>
     <div>
       <label for="has_phone_service">Has Phone Service:</label>
       <select id="has_phone_service">
-        <option value="Yes">Yes</option>
+        <option value="Yes checked">Yes</option>
         <option value="No">No</option>
       </select>    
     </div>
@@ -84,34 +85,34 @@
       <label for="has_multiple_lines">Has Multiple Lines:</label>
       <select id="has_multiple_lines">
         <option value="Yes">Yes</option>
-        <option value="No">No</option>
+        <option value="No" checked>No</option>
       </select>    
     </div>
     <div>
       <label for="has_premium_tech_support">Has Premium Tech Support:</label>
       <select id="has_premium_tech_support">
-        <option value="Yes">Yes</option>
+        <option value="Yes" checked>Yes</option>
         <option value="No">No</option>
       </select>    
     </div>
     <div>
       <label for="has_online_security">Has Online Security:</label>
       <select id="has_online_security">
-        <option value="Yes">Yes</option>
+        <option value="Yes" checked>Yes</option>
         <option value="No">No</option>
       </select>    
     </div>
     <div>
       <label for="has_online_backup">Has Online Backup:</label>
       <select id="has_online_backup">
-        <option value="Yes">Yes</option>
+        <option value="Yes" checked>Yes</option>
         <option value="No">No</option>
       </select>    
     </div>
     <div>
       <label for="has_device_protection">Has Device Protection:</label>
       <select id="has_device_protection">
-        <option value="Yes">Yes</option>
+        <option value="Yes" checked>Yes</option>
         <option value="No">No</option>
       </select>  
     </div>
@@ -119,68 +120,68 @@
       <label for="contract_type">Contract Type:</label>
       <select id="contract_type">
         <option value="Month-to-Month">Month-to-Month</option>
-        <option value="One Year">One Year</option>
+        <option value="One Year" checked>One Year</option>
         <option value="Two Year">Two Year</option>
       </select>  
     </div>
     <div>
       <label for="paperless_billing">Paperless Billing:</label>
       <select id="paperless_billing">
-        <option value="Yes">Yes</option>
+        <option value="Yes" checked>Yes</option>
         <option value="No">No</option>
       </select>  
     </div>
     <div>
       <label for="payment_method">Payment Method:</label>
       <select id="payment_method">
-        <option value="Credit Card">Credit Card</option>
+        <option value="Credit Card" checked>Credit Card</option>
         <option value="Bank Withdrawal">Bank Withdrawal</option>
       </select>  
     </div>
     <div>
       <label for="avg_long_distance_fee_monthly">Average Long Distance Fee (Monthly):</label>
-      <input type="number" id="avg_long_distance_fee_monthly" name="avg_long_distance_fee_monthly">
+      <input type="number" id="avg_long_distance_fee_monthly" name="avg_long_distance_fee_monthly" value="123.4">
     </div>
     <div>
       <label for="total_long_distance_fee">Total Long Distance Fee:</label>
-      <input type="number" id="total_long_distance_fee" name="total_long_distance_fee">
+      <input type="number" id="total_long_distance_fee" name="total_long_distance_fee" value="12345.5">
     </div>
     <div>
       <label for="avg_gb_download_monthly">Average GB Download (Monthly):</label>
-      <input type="number" id="avg_gb_download_monthly" name="avg_gb_download_monthly">
+      <input type="number" id="avg_gb_download_monthly" name="avg_gb_download_monthly" value="12">
     </div>
     <div>
       <label for="stream_tv">Stream TV:</label>
       <select id="stream_tv">
-        <option value="Yes">Yes</option>
+        <option value="Yes" checked>Yes</option>
         <option value="No">No</option>
       </select> 
     </div>
     <div>
       <label for="stream_movie">Stream Movie:</label>
       <select id="stream_movie">
-        <option value="Yes">Yes</option>
+        <option value="Yes" checked>Yes</option>
         <option value="No">No</option>
       </select>
     </div>
     <div>
       <label for="stream_music">Stream Music:</label>
       <select id="stream_music">
-        <option value="Yes">Yes</option>
+        <option value="Yes" checked>Yes</option>
         <option value="No">No</option>
       </select>
     </div>
     <div>
       <label for="total_monthly_fee">Total Monthly Fee:</label>
-      <input type="number" id="total_monthly_fee" name="total_monthly_fee">
+      <input type="number" id="total_monthly_fee" name="total_monthly_fee" value="123">
     </div>
     <div>
       <label for="total_charges_quarter">Total Charges (Quarterly):</label>
-      <input type="number" id="total_charges_quarter" name="total_charges_quarter">
+      <input type="number" id="total_charges_quarter" name="total_charges_quarter" value="123">
     </div>
     <div>
       <label for="total_refunds">Total Refunds:</label>
-      <input type="number" id="total_refunds" name="total_refunds">
+      <input type="number" id="total_refunds" name="total_refunds" value="0">
     </div>
     <div>
       <input type="submit" value="Submit">
