@@ -68,7 +68,7 @@ class DataPreprocessor:
         self.df['total_monthly_fee'] = self.__scale_numerical(self.df['total_monthly_fee'])
         self.df['total_charges_quarter'] = self.__scale_numerical(self.df['total_charges_quarter'])
         self.df['total_refunds'] = self.__scale_numerical(self.df['total_refunds'])
-        self.df['population'] = self.__scale_numerical(self.df['population'])
+        # self.df['population'] = self.__scale_numerical(self.df['population'])
 
         # Label encode 
         self.df['status'] = self.__label_encode(self.df['status'])
