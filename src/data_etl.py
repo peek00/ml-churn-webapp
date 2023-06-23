@@ -42,6 +42,43 @@ class DataETL:
             print(e)
             print("Connection Failed!")
 
+    def retrieve_tables(self, table_names:list=[
+                                "account",
+                                "account_usage",
+                                "churn_status",
+                                "city",
+                                "customer"]
+                        )->dict:
+        mapping = {
+            "account": "ACCOUNT_DF",
+            "account_usage": "ACC_USAGE_DF",
+            "churn_status": "CHURN_STATUS_DF",
+            "city": "CITY_DF",
+            "customer": "CUSTOMER_DF"
+        }
+
+        connection = pymysql.connect(
+            host = self.host,
+            user = self.user,
+            password = self.pwd,
+            database = self.name
+            )
+        
+        database_obj = {}
+        try:
+            for table_name in table_names:
+                query = f"SELECT * FROM {table_name}"
+                df = pd.read_sql(query, connection)
+
+                database_obj[table_name] = df
+        finally:
+            connection.close()
+        for k,v in database_obj.items():
+            assert len(v) != 0, f"DF created from {k} is empty!"
+            setattr(self, mapping[k], v)
+            
+        return database_obj
+
     def join_tables(self):
         """
         Join all tables in the database.
@@ -92,6 +129,7 @@ class DataETL:
 if __name__ == "__main__":
     etl = DataETL()
     # etl.test_db_connection()
-    etl.use_local_data("research/data_given/")
+    etl.retrieve_tables()
+    # etl.use_local_data("research/data_given/")
     etl.join_tables()
     print(etl.df.head())
