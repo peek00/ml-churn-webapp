@@ -69,7 +69,6 @@ class DataETL:
             for table_name in table_names:
                 query = f"SELECT * FROM {table_name}"
                 df = pd.read_sql(query, connection)
-
                 database_obj[table_name] = df
         finally:
             connection.close()

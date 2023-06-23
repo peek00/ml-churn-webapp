@@ -101,12 +101,12 @@ class DataPreprocessor:
 
 
         # Fixing churn_labels
-        self.df.loc[self.df['status'] == 2, 'churn_label'] = 1
-        self.df.loc[self.df['status'] == 0, 'churn_label'] = 0
-        self.df.loc[self.df['status'] == 1, 'churn_label'] = 0
+        self.df.loc[self.df['customer_status'] == 2, 'churn_label'] = 1
+        self.df.loc[self.df['customer_status'] == 0, 'churn_label'] = 0
+        self.df.loc[self.df['customer_status'] == 1, 'churn_label'] = 0
 
         # Dropping
-        cols_to_drop = ['churn_reason', 'city', 'latitutde', 'longitude', 'area_id']
+        cols_to_drop = ['churn_reason', 'city_name', 'latitude', 'longitude', 'area_id']
         self.df = self.df.drop(cols_to_drop, axis=1)
 
         # print(self.df['churn_label'].value_counts())
