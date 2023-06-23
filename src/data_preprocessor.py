@@ -71,7 +71,7 @@ class DataPreprocessor:
         # self.df['population'] = self.__scale_numerical(self.df['population'])
 
         # Label encode 
-        self.df['status'] = self.__label_encode(self.df['status'])
+        self.df['customer_status'] = self.__label_encode(self.df['customer_status'])
 
         # Binary encode
         # churn_df = self.__binary_encode(self.df['churn_category'])
