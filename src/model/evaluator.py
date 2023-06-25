@@ -11,14 +11,18 @@ class ModelEvaluator:
     '''
     supported_metrics = ['auc', 'precision', 'recall', 'f1']
 
-    def __init__(self, model, X, y):
+    def __init__(self, model, X, y, feature_list=None):
         self.model = model
-        self.X = X
+        if feature_list is not None:
+            self.X = X[feature_list]
+        else:
+            self.X = X
         self.y = y.astype(int)
 
 
     def evaluate_auc_threshold(self, y_true, y_pred_prob):
     # Calculate FPR, TPR, and thresholds
+    
         y_true = y_true.to_numpy()
         fpr, tpr, thresholds = roc_curve(y_true, y_pred_prob)
         # Convert y_true to nd.array

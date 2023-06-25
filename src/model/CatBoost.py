@@ -1,23 +1,29 @@
-from abc import ABC, abstractmethod
-import xgboost as xgb
+import catboost as cb
+from catboost import CatBoostClassifier
 from sklearn.model_selection import KFold
 import numpy as np
 import pickle
 
+from model.model_abc import Model
 from data_etl import DataETL
 from data_preprocessor import DataPreprocessor
 from data_builder import DataBuilder
-from model.model_abc import Model
 
-class XGBoost(Model):
-    def __init__(self):
-        self.model = xgb.XGBClassifier()
-    
-    def train(self, X, y, n_splits=5):
+class CatBoost(Model):
+    def __init__(self, name:str):
+        self.model = CatBoostClassifier()
+        self.name = name
+
+    def train(self, X, y, features_list:list, n_splits=5):
+        assert features_list is not None, "features_list cannot be None"
+
         y = y.astype(int)
         kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
         scores = []
         count = 1
+
+        X = X[features_list]
+
         for train_index, val_index in kf.split(X):
             X_train, X_val = X.iloc[train_index], X.iloc[val_index]  # Updated indexing
             y_train, y_val = y.iloc[train_index], y.iloc[val_index]  # Updated indexing
@@ -34,7 +40,7 @@ class XGBoost(Model):
 
     def predict(self, X):
         return self.model.predict(X)
-    
+
     def predict_proba(self, X):
         return self.model.predict_proba(X)[:,1]
     
@@ -44,20 +50,24 @@ class XGBoost(Model):
             print("Model loaded successfully")
 
     def save(self):
-        with open('model.pkl', 'wb') as file:
+        with open(f'{self.name}_model.pkl', 'wb') as file:
             pickle.dump(self.model, file)
             print("Model saved successfully")
-    
-
 if __name__ == "__main__":
     etl = DataETL()
-    etl.use_local_data("research/data_given/")
+    etl.retrieve_tables()
     etl.join_tables()
 
     df = etl.get_df()
     dp = DataPreprocessor(df)
 
     db = DataBuilder(dp.get_df())
-    print(db.get_transformed_X_train().head())
-    
+    features_list = ['contract_type', 'tenure_months', 'total_long_distance_fee', 'total_charges_quarter', 'num_referrals' ]
+
+    model = CatBoost()
+    X_train = db.get_X_train()
+    y_train = db.get_y_train()
+    model.train(X_train, y_train, features_list)
+    model.train()
+
     pass
