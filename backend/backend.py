@@ -8,6 +8,7 @@ from pathlib import Path
 import os
 import pandas as pd
 
+
 from backend_data_preprocessor import DataPreprocessor
 
 
@@ -30,25 +31,25 @@ def load_pca(dir: Path = "preprocess"):
 
     return pca
 
-def preprocess_input(data:dict, dir:Path="preprocess"):
+def preprocess_input(data:dict, dir:Path="preprocess", model="catboost"):
     """
     Uses backend preprocess class to preprocess input data.
     """
     data_processer = DataPreprocessor()
     input_df = pd.DataFrame.from_dict(data, orient='index').transpose()
-    parsed_input = data_processer.preprocess_input(input_df)
+    parsed_input = data_processer.preprocess_input(input_df, model)
     # Doing PCA
-    pca = load_pca(dir)
-    cols_to_drop = [ 'zip_code']
-    parsed_input = parsed_input.drop(cols_to_drop, axis=1)
-
-    # Fit pca
-    print(f"Processed order is {parsed_input.columns}")
-    print(parsed_input.columns[parsed_input.isna().any()].tolist())
-
-    transformed_features = pca.transform(parsed_input)
-    return transformed_features
-
+    if model =="xgboost":
+        pca = load_pca(dir)
+        cols_to_drop = [ 'zip_code']
+        parsed_input = parsed_input.drop(cols_to_drop, axis=1)
+        # Fit pca
+        transformed_features = pca.transform(parsed_input)
+        return transformed_features
+    if model == "catboost":
+        features_list = ['contract_type', 'tenure_months', 'total_long_distance_fee', 'total_charges_quarter', 'num_referrals' ]
+        parsed_input = parsed_input[features_list]
+        return parsed_input
 
 # GET endpoint
 @app.route('/',  methods=['GET'])
@@ -71,23 +72,19 @@ def get_prediction():
     """
     Redirected here with information from the form.
     """
-    # Load the saved model
-    model_path = "model/model.pkl"
-    model = joblib.load(model_path)
-
     # Get the data from the request
     data = {}
+    print(request.form.items())
     for key, value in request.form.items():
+        print(data)
+        print(key)
         data[key] = value
-
-
+    print(data)
     # Use the JSON dictionary for prediction or further processing
-    
-    processed_input = preprocess_input(data)
-    
+    processed_input = preprocess_input(data, model="catboost")
 
     # Load model
-    model_path = "model/model.pkl"
+    model_path = "model/catboost_model.pkl"
     with open(model_path, 'rb') as file:
         model = pickle.load(file)
 
@@ -99,12 +96,7 @@ def get_prediction():
     return {
         "prediction": int(predictions[0].astype(int))
     }
-    # Make predictions using the loaded model
-    # predictions = model.predict(input_data)
 
-    # Return the predictions as a JSON response
-    return "test"
-    return jsonify(predictions=predictions.tolist())
 
 if __name__ == '__main__':
     # Enable hot reloading
