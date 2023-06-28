@@ -49,7 +49,6 @@ if __name__ == "__main__":
     processed_df = preprocess(joined_df)
 
     model = CatBoost("catboost")
-
     model, X_train, y_train, X_test, y_test = train(processed_df, model)
     evaluate(model, X_test, y_test)
     model.save()
