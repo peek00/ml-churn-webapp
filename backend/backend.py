@@ -81,7 +81,10 @@ def get_prediction():
         input_data = request.get_json().items()
     
     for key, value in input_data:
-        data[key] = value
+        if key in ['tenure_months', 'num_referrals', 'total_long_distance_fee', 'total_charges_quarter']:
+            data[key]= float(value)
+        else:
+            data[key] = value
     # Use the JSON dictionary for prediction or further processing
     processed_input = preprocess_input(data, model="catboost")
     # Load model
