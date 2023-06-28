@@ -24,10 +24,10 @@ class DataPreprocessor:
         current_path = os.path.join(os.getcwd(), dir)
         file_names = [
             "mapping.pkl",
-            "internet_type_ohe.pkl",
-            "label_encoder.pkl",
-            "scaler.pkl",
-            "payment_method_ohe.pkl"
+            # "internet_type_ohe.pkl",
+            # "label_encoder.pkl",
+            "minmax_scaler.pkl",
+            # "payment_method_ohe.pkl"
         ]
         for file_name in file_names:
             file_path = os.path.join(current_path, file_name)
@@ -40,7 +40,6 @@ class DataPreprocessor:
             except pickle.UnpicklingError:
                 print(f"Error: Failed to unpickle file: {file_path}")
                 setattr(self, file_name.split('.')[0], None)
-     
 
     def get_df(self)->pd.DataFrame:
         return self.df
@@ -56,13 +55,14 @@ class DataPreprocessor:
         """
         Perform all preprocessing steps.
         """
+        print(df.head())
         if model == "catboost":
-            self.df = df
-            self.df['contract_type'] = self.__map_categorical(self.df['contract_type'], custom_mapping={'Month-to-Month':0, 'One Year':1, 'Two Year':2})
-            self.df['num_referrals'] = self.__scale_numerical(self.df['num_referrals'], on_input=True)
-            self.df['total_long_distance_fee'] = self.__scale_numerical(self.df['total_long_distance_fee'], on_input=True)
-            self.df['tenure_months'] = self.__scale_numerical(self.df['tenure_months'], on_input=True)
-            self.df['total_charges_quarter'] = self.__scale_numerical(self.df['total_charges_quarter'], on_input=True)
+            # Transform using self.minmaxscalar
+            new_df_array = self.minmax_scaler.transform(df[["tenure_months", "total_charges_quarter", "num_referrals", "total_long_distance_fee"]])
+            new_df = pd.DataFrame(new_df_array, columns=["tenure_months", "total_charges_quarter", "num_referrals", "total_long_distance_fee"])
+            new_df['contract_type'] = self.__map_categorical(df['contract_type'], custom_mapping={'Month-to-Month':0, 'One Year':1, 'Two Year':2})
+            
+            self.df = new_df
             return self.df
         elif model == "xgboost":
 
