@@ -74,25 +74,24 @@ def get_prediction():
     """
     # Get the data from the request
     data = {}
-    print(request.form.items())
-    for key, value in request.form.items():
-        print(data)
-        print(key)
+    if request.form:
+        input_data = request.form.items()
+    else:
+        # Assuming data is sent as JSON
+        input_data = request.get_json().items()
+    
+    for key, value in input_data:
         data[key] = value
-    print(data)
     # Use the JSON dictionary for prediction or further processing
     processed_input = preprocess_input(data, model="catboost")
-
     # Load model
     model_path = "model/catboost_model.pkl"
     with open(model_path, 'rb') as file:
         model = pickle.load(file)
-
     # Test values for prediction == 0
     # values = [[-1.240957, -0.914264, 0.437043, -0.800090, 0.421031]]
     # processed_input = np.array(values)
     predictions = model.predict(processed_input)
-
     return {
         "prediction": int(predictions[0].astype(int))
     }
