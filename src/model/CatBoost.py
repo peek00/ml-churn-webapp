@@ -11,7 +11,7 @@ from data_builder import DataBuilder
 
 class CatBoost(Model):
     def __init__(self, name:str):
-        self.model = CatBoostClassifier()
+        self.model = CatBoostClassifier(iterations=1000, learning_rate=0.1, depth=6, loss_function='Logloss', verbose=True, random_seed=42)
         self.name = name
 
     def train(self, X, y, features_list:list, n_splits=5):
@@ -52,7 +52,7 @@ class CatBoost(Model):
     def save(self):
         with open(f'{self.name}_model.pkl', 'wb') as file:
             pickle.dump(self.model, file)
-            print("Model saved successfully")
+            print(f"Model saved successfully to {self.name}_model.pkl")
 if __name__ == "__main__":
     etl = DataETL()
     etl.retrieve_tables()
