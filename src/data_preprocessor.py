@@ -40,74 +40,100 @@ class DataPreprocessor:
         """
         Perform all preprocessing steps.
         """
-        # Map string values to categorical
-        self.df['has_internet_service'] = self.__map_categorical(self.df['has_internet_service'])
-        self.df['has_phone_service'] = self.__map_categorical(self.df['has_phone_service'])
-        self.df['has_unlimited_data'] = self.__map_categorical(self.df['has_unlimited_data'])
-        self.df['has_multiple_lines'] = self.__map_categorical(self.df['has_multiple_lines'])
-        self.df['has_premium_tech_support'] = self.__map_categorical(self.df['has_premium_tech_support'])
-        self.df['has_online_security'] = self.__map_categorical(self.df['has_online_security'])
-        self.df['has_online_backup'] = self.__map_categorical(self.df['has_online_backup'])
-        self.df['has_device_protection'] = self.__map_categorical(self.df['has_device_protection'])
-        self.df['paperless_billing'] = self.__map_categorical(self.df['paperless_billing'])
-        self.df['stream_movie'] = self.__map_categorical(self.df['stream_movie'])
-        self.df['stream_music'] = self.__map_categorical(self.df['stream_music'])
-        self.df['stream_tv'] = self.__map_categorical(self.df['stream_tv'])
-        self.df['senior_citizen'] = self.__map_categorical(self.df['senior_citizen'])
-        self.df['married'] = self.__map_categorical(self.df['married'])
-        self.df['gender'] = self.__map_categorical(self.df['gender'])
-        self.df['contract_type'] = self.__map_categorical(self.df['contract_type'], custom_mapping={'Month-to-Month':0, 'One Year':1, 'Two Year':2})
-
-        # Scaling numerical values
-        self.df['num_referrals'] = self.__scale_numerical(self.df['num_referrals'])
-        self.df['age'] = self.__scale_numerical(self.df['age'])
-        self.df['tenure_months'] = self.__scale_numerical(self.df['tenure_months'])
-        self.df['avg_long_distance_fee_monthly'] = self.__scale_numerical(self.df['avg_long_distance_fee_monthly'])
-        self.df['total_long_distance_fee'] = self.__scale_numerical(self.df['total_long_distance_fee'])
-        self.df['avg_gb_download_monthly'] = self.__scale_numerical(self.df['avg_gb_download_monthly'])
-        self.df['total_monthly_fee'] = self.__scale_numerical(self.df['total_monthly_fee'])
-        self.df['total_charges_quarter'] = self.__scale_numerical(self.df['total_charges_quarter'])
-        self.df['total_refunds'] = self.__scale_numerical(self.df['total_refunds'])
-        # self.df['population'] = self.__scale_numerical(self.df['population'])
-
-        # Label encode 
-        self.df['customer_status'] = self.__label_encode(self.df['customer_status'])
-
-        # Binary encode
-        # churn_df = self.__binary_encode(self.df['churn_category'])
-        # assert not churn_df.empty, "Churn DF is empty!"
-        # self.df = pd.concat([self.df, churn_df], axis=1)
-        self.df.drop('churn_category', axis=1, inplace=True)
-
-        # One hot encode
-        # Payment method
-        one_hot_encoder = OneHotEncoder()
-        ohe_payment_method = self.__one_hot_encode(self.df['payment_method'], one_hot_encoder)
-        for col_name in ohe_payment_method.columns:
-            assert col_name not in self.df.columns, f"Column '{col_name}' already exists in the DataFrame."
-        self.df = pd.concat([self.df, ohe_payment_method], axis=1)
-        # Dropping payment method
-        self.df = self.df.drop('payment_method', axis=1)
-        # Internet_type
-        one_hot_encoder = OneHotEncoder()
-        ohe_internet_type = self.__one_hot_encode(self.df['internet_type'], one_hot_encoder)
-        for col_name in ohe_internet_type.columns:
-            assert col_name not in self.df.columns, f"Column '{col_name}' already exists in the DataFrame."
-
-        self.df = pd.concat([self.df, ohe_internet_type], axis=1)
-        # Dropping internet type
-        self.df = self.df.drop('internet_type', axis=1)
-        self.df.columns = self.df.columns.astype(str)
+        # Doing this for catboost ONLY
+        new_df = pd.DataFrame()
+        new_df['contract_type'] = self.__map_categorical(self.df['contract_type'], custom_mapping={'Month-to-Month':0, 'One Year':1, 'Two Year':2})
+        new_df['num_referrals'] = self.df['num_referrals']
+        new_df['tenure_months'] = self.df['tenure_months']
+        new_df['total_long_distance_fee'] = self.df['total_long_distance_fee']
+        new_df['total_charges_quarter'] = self.df['total_charges_quarter']
+        new_df['customer_status'] = self.df['customer_status']
+        new_df['churn_label'] = self.df['churn_label']
+        new_df['customer_status'] = self.__label_encode(self.df['customer_status'])
+         # Fixing churn_labels
+        new_df.loc[new_df['customer_status'] == 2, 'churn_label'] = 1
+        new_df.loc[new_df['customer_status'] == 0, 'churn_label'] = 0
+        new_df.loc[new_df['customer_status'] == 1, 'churn_label'] = 0
+    
 
 
-        # Fixing churn_labels
-        self.df.loc[self.df['customer_status'] == 2, 'churn_label'] = 1
-        self.df.loc[self.df['customer_status'] == 0, 'churn_label'] = 0
-        self.df.loc[self.df['customer_status'] == 1, 'churn_label'] = 0
+        # Creating a new min max scalar
+        self.scaler = MinMaxScaler()
+        self.scaler.fit(new_df[['tenure_months', 'total_charges_quarter', "num_referrals", "total_long_distance_fee"]])
+        new_df[['tenure_months', 'total_charges_quarter', "num_referrals", "total_long_distance_fee"]] = self.scaler.transform(new_df[['tenure_months', 'total_charges_quarter', "num_referrals", "total_long_distance_fee"]])
+        new_df.drop('customer_status', axis=1, inplace=True)
+        print(new_df.head())
+        self.df = new_df
 
-        # Dropping
-        cols_to_drop = ['churn_reason', 'city_name', 'latitude', 'longitude', 'area_id']
-        self.df = self.df.drop(cols_to_drop, axis=1)
+
+        # # Map string values to categorical
+        # self.df['has_internet_service'] = self.__map_categorical(self.df['has_internet_service'])
+        # self.df['has_phone_service'] = self.__map_categorical(self.df['has_phone_service'])
+        # self.df['has_unlimited_data'] = self.__map_categorical(self.df['has_unlimited_data'])
+        # self.df['has_multiple_lines'] = self.__map_categorical(self.df['has_multiple_lines'])
+        # self.df['has_premium_tech_support'] = self.__map_categorical(self.df['has_premium_tech_support'])
+        # self.df['has_online_security'] = self.__map_categorical(self.df['has_online_security'])
+        # self.df['has_online_backup'] = self.__map_categorical(self.df['has_online_backup'])
+        # self.df['has_device_protection'] = self.__map_categorical(self.df['has_device_protection'])
+        # self.df['paperless_billing'] = self.__map_categorical(self.df['paperless_billing'])
+        # self.df['stream_movie'] = self.__map_categorical(self.df['stream_movie'])
+        # self.df['stream_music'] = self.__map_categorical(self.df['stream_music'])
+        # self.df['stream_tv'] = self.__map_categorical(self.df['stream_tv'])
+        # self.df['senior_citizen'] = self.__map_categorical(self.df['senior_citizen'])
+        # self.df['married'] = self.__map_categorical(self.df['married'])
+        # self.df['gender'] = self.__map_categorical(self.df['gender'])
+        # self.df['contract_type'] = self.__map_categorical(self.df['contract_type'], custom_mapping={'Month-to-Month':0, 'One Year':1, 'Two Year':2})
+
+        # # Scaling numerical values
+        # self.df['num_referrals'] = self.__scale_numerical(self.df['num_referrals'])
+        # self.df['age'] = self.__scale_numerical(self.df['age'])
+        # self.df['tenure_months'] = self.__scale_numerical(self.df['tenure_months'])
+        # self.df['avg_long_distance_fee_monthly'] = self.__scale_numerical(self.df['avg_long_distance_fee_monthly'])
+        # self.df['total_long_distance_fee'] = self.__scale_numerical(self.df['total_long_distance_fee'])
+        # self.df['avg_gb_download_monthly'] = self.__scale_numerical(self.df['avg_gb_download_monthly'])
+        # self.df['total_monthly_fee'] = self.__scale_numerical(self.df['total_monthly_fee'])
+        # self.df['total_charges_quarter'] = self.__scale_numerical(self.df['total_charges_quarter'])
+        # self.df['total_refunds'] = self.__scale_numerical(self.df['total_refunds'])
+        # # self.df['population'] = self.__scale_numerical(self.df['population'])
+
+        # # Label encode 
+        # self.df['customer_status'] = self.__label_encode(self.df['customer_status'])
+
+        # # Binary encode
+        # # churn_df = self.__binary_encode(self.df['churn_category'])
+        # # assert not churn_df.empty, "Churn DF is empty!"
+        # # self.df = pd.concat([self.df, churn_df], axis=1)
+        # self.df.drop('churn_category', axis=1, inplace=True)
+
+        # # One hot encode
+        # # Payment method
+        # one_hot_encoder = OneHotEncoder()
+        # ohe_payment_method = self.__one_hot_encode(self.df['payment_method'], one_hot_encoder)
+        # for col_name in ohe_payment_method.columns:
+        #     assert col_name not in self.df.columns, f"Column '{col_name}' already exists in the DataFrame."
+        # self.df = pd.concat([self.df, ohe_payment_method], axis=1)
+        # # Dropping payment method
+        # self.df = self.df.drop('payment_method', axis=1)
+        # # Internet_type
+        # one_hot_encoder = OneHotEncoder()
+        # ohe_internet_type = self.__one_hot_encode(self.df['internet_type'], one_hot_encoder)
+        # for col_name in ohe_internet_type.columns:
+        #     assert col_name not in self.df.columns, f"Column '{col_name}' already exists in the DataFrame."
+
+        # self.df = pd.concat([self.df, ohe_internet_type], axis=1)
+        # # Dropping internet type
+        # self.df = self.df.drop('internet_type', axis=1)
+        # self.df.columns = self.df.columns.astype(str)
+
+
+        # # Fixing churn_labels
+        # self.df.loc[self.df['customer_status'] == 2, 'churn_label'] = 1
+        # self.df.loc[self.df['customer_status'] == 0, 'churn_label'] = 0
+        # self.df.loc[self.df['customer_status'] == 1, 'churn_label'] = 0
+
+        # # Dropping
+        # cols_to_drop = ['churn_reason', 'city_name', 'latitude', 'longitude', 'area_id']
+        # self.df = self.df.drop(cols_to_drop, axis=1)
 
         # print(self.df['churn_label'].value_counts())
     
@@ -210,19 +236,20 @@ class DataPreprocessor:
         # Save scaling object
         with open('backend/preprocess/minmax_scaler.pkl', 'wb') as file:
             pickle.dump(self.scaler, file)
-        with open('backend/preprocess/label_encoder.pkl', 'wb') as file:
-            pickle.dump(self.label_encoder, file)
-        with open('backend/preprocess/categorical_mapping.pkl', 'wb') as file:
-            pickle.dump(self.mapping, file)
+        # with open('backend/preprocess/label_encoder.pkl', 'wb') as file:
+        #     pickle.dump(self.label_encoder, file)
+        # with open('backend/preprocess/categorical_mapping.pkl', 'wb') as file:
+        #     pickle.dump(self.mapping, file)
         # with open('backend/preprocess/binary_encoder.pkl', 'wb') as file:
         #     pickle.dump(self.binary_encoder, file)
-        print("Pickle objects")
+        print("Pickle objects!")
 
     
 if __name__ == "__main__":
     # Building ETL Object
     etl = DataETL()
-    etl.use_local_data("research/data_given/")
+    # etl.use_local_data("research/data_given/")
+    etl.retrieve_tables()
     etl.join_tables()
 
     df = etl.get_df()
