@@ -128,11 +128,10 @@ class DataBuilder:
 
     def get_negative(self):
         # Filter the transformed X_train based on churn_label = 0
-        print(len(self.y_train))
-        print(len(self.X_train))
         churn_0_indices = self.y_train[self.y_train == 0].index
         print(churn_0_indices)
-        churn_0_rows = self.transformed_X_train.iloc[churn_0_indices].head(5)
+        # churn_0_rows = self.transformed_X_train.iloc[churn_0_indices].head(5)
+        churn_0_rows = self.X_train.iloc[churn_0_indices].head(5)
         
         # Print the churn_label = 0 rows
         print(churn_0_rows)
@@ -145,7 +144,8 @@ if __name__ == "__main__":
     etl.join_tables()
 
     df = etl.get_df()
-    dp = DataPreprocessor(df)
-
-    db = DataBuilder(dp.get_df())
-    db.get_negative()
+    print(df[df['churn_label'] == "Yes"][["tenure_months",'num_referrals','total_long_distance_fee','total_charges_quarter','contract_type']].head())
+    print(df[df['churn_label'] == "No"][["tenure_months",'num_referrals','total_long_distance_fee','total_charges_quarter','contract_type']].head())
+    # dp = DataPreprocessor(df)
+    # db = DataBuilder(dp.get_df())
+    # db.get_negative()
