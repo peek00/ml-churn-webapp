@@ -14,15 +14,11 @@ class CatBoost(Model):
         self.model = CatBoostClassifier(iterations=1000, learning_rate=0.1, depth=6, loss_function='Logloss', verbose=True, random_seed=42)
         self.name = name
 
-    def train(self, X, y, features_list:list, n_splits=5):
-        assert features_list is not None, "features_list cannot be None"
-
+    def train(self, X, y, n_splits=5):
         y = y.astype(int)
         kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
         scores = []
         count = 1
-
-        X = X[features_list]
 
         for train_index, val_index in kf.split(X):
             X_train, X_val = X.iloc[train_index], X.iloc[val_index]  # Updated indexing

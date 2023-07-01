@@ -31,15 +31,17 @@ class DataPreprocessor:
     def preprocess(self):
         self.__preprocess()
     
-    def __load_encoder(self, encoder_name:str, dir:Path="preprocess"):
+    def __load_encoder(self, encoder_name:str, dir:Path="backend/preprocess"):
         """
         Assuming files are in a folder called preprocess and are labelled as name.pkl
         """
         encoder_filename = f"{encoder_name}.pkl"
         encoder_path = os.path.join(dir, encoder_filename)
+        print(f"Attempting to load {encoder_name}")
         try:
             with open(encoder_path, 'rb') as file:
                 setattr(self, encoder_name, pickle.load(file))
+                print(f"Loaded {encoder_path}!")
         except FileNotFoundError:
             print(f"Encoder file not found: {encoder_path}")
             encoder = None
@@ -81,7 +83,6 @@ class DataPreprocessor:
         target_df.loc[target_df['customer_status'] == 1, 'churn_label'] = 0
 
         new_df['churn_label'] = target_df['churn_label']
-        new_df['contract_type'] = new_df['contract_type'].map(mapping)
 
         self.transformed_df = new_df
         return self.transformed_df
@@ -116,10 +117,9 @@ class DataPreprocessor:
         # new_df.loc[new_df['customer_status'] == 1, 'churn_label'] = 0
 
         # Doing this for PCA
-        scalar_values = self.df[["tenure_months", "total_long_distance_fee", "total_charges_quarter", "num_dependents" ]]
+        scalar_values = self.df[["tenure_months", "total_long_distance_fee", "total_charges_quarter", "num_dependents", "num_referrals" ]]
         to_map = self.df[["contract_type", "has_premium_tech_support", "married", "has_device_protection", "has_online_backup"]]
 
-        self.scaler = MinMaxScaler()
         self.scaler.fit(scalar_values)
         new_df = pd.DataFrame(self.scaler.transform(scalar_values), columns=scalar_values.columns)
         for column in to_map.columns:
@@ -131,15 +131,14 @@ class DataPreprocessor:
                                                         "Yes":1,
                                                         "No":0})   
         new_df = pd.concat([new_df, to_map], axis=1)    
-
         new_df['customer_status'] = self.__label_encode(self.df['customer_status'])
          # Fixing churn_labels
         new_df.loc[new_df['customer_status'] == 2, 'churn_label'] = 1
         new_df.loc[new_df['customer_status'] == 0, 'churn_label'] = 0
         new_df.loc[new_df['customer_status'] == 1, 'churn_label'] = 0
-        new_df.drop('customer_status', axis=1, inplace=True)
-        print(new_df.head())
+        # new_df.drop('customer_status', axis=1, inplace=True)
         self.df = new_df
+        self.save()
 
         # Creating a new min max scalar
         # self.scaler = MinMaxScaler()
@@ -314,9 +313,8 @@ class DataPreprocessor:
     
     def save(self):
         """
-        Saves the PCA and scaling objects along with any other relevant information.
+        Saves the scaling objects along with any other relevant information.
         """
-        # Save PCA object
         # Save scaling object
         with open('backend/preprocess/minmax_scaler.pkl', 'wb') as file:
             pickle.dump(self.scaler, file)
@@ -339,7 +337,7 @@ if __name__ == "__main__":
     df = etl.get_df()
 
     dp = DataPreprocessor(df)
-    dp.df.head()
+    dp.preprocess()
     dp.save()
  
 

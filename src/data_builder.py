@@ -72,14 +72,19 @@ class DataBuilder:
         """
         Performs PCA on just the X_train and returns the top 5 features.
         """
-        features = self.X_train.drop(columns=['customer_status', 'customer_id', 'account_id', 'zip_code'])  # Replace 'target' with your churn_label variable column name
-        # print(f"I need this order: {features.columns}")
-        
         self.pca = PCA(n_components=n_components)
-        transformed_features = self.pca.fit_transform(features)
+        transformed_features = self.pca.fit_transform(self.X_train)
         self.transformed_X_train = pd.DataFrame(data=transformed_features, columns=[f"PC{i+1}" for i in range(n_components)])
-
         return self.transformed_X_train
+    
+    def save_pca(self):
+        """
+        Saves thend scaling objects along with any other relevant information.
+        """
+        # Save scaling object
+        with open('backend/preprocess/pca.pkl', 'wb') as file:
+            pickle.dump(self.pca, file)
+        print("Pickled objects!")
     
     def get_transformed_X_train(self)->pd.DataFrame:
         return self.transformed_X_train
@@ -89,22 +94,13 @@ class DataBuilder:
     
     def get_transformed_X_test(self)->pd.DataFrame:
         # Apply PCA using 
-        features = self.X_test.drop(columns=['customer_status', 'customer_id', 'account_id', 'zip_code'])  # Replace 'target' with your churn_label variable column name
-        self.transformed_X_test = self.pca.transform(features)
+        # features = self.X_test.drop(columns=['customer_status'])  # Replace 'target' with your churn_label variable column name
+        self.transformed_X_test = self.pca.transform(self.X_test)
         return self.transformed_X_test
     
     def get_y_test(self)->pd.Series:
         return self.y_test
     
-    # def save(self):
-    #     """
-    #     Saves pca object to pickle file.
-    #     """
-    #     if self.pca != None:
-    #         with open('pca.pkl', 'wb') as file:
-    #             pickle.dump(self.pca, file)
-    #         print("Saved PCA object to pickle file.")
-
     def get_negative(self):
         # Filter the transformed X_train based on churn_label = 0
         churn_0_indices = self.y_train[self.y_train == 0].index
@@ -128,8 +124,5 @@ if __name__ == "__main__":
     dp.preprocess()
 
     db = DataBuilder(dp.get_df())
-    db.get_corr_to_target()
-    # print(dp.get_df().head()
-    # db = DataBuilder(dp.get_df())
-    # db.get_corr_to_target()
-    # db.get_negative()
+    db.perform_pca(5)
+    db.save_pca()

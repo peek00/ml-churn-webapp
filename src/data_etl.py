@@ -121,9 +121,6 @@ class DataETL:
         Returns the joined dataframe.
         """
         return self.df
-    
-   
-        
 
 if __name__ == "__main__":
     etl = DataETL()
@@ -131,4 +128,3 @@ if __name__ == "__main__":
     etl.retrieve_tables()
     # etl.use_local_data("research/data_given/")
     etl.join_tables()
-    print(etl.df.head())

@@ -19,7 +19,6 @@ class DataPreprocessor:
         """
         self.load_encoders()
 
-
     def load_encoders(self, dir: Path = "preprocess"):
         current_path = os.path.join(os.getcwd(), dir)
         file_names = [
@@ -65,7 +64,6 @@ class DataPreprocessor:
             self.df = new_df
             return self.df
         elif model == "xgboost":
-
             # Map string values to categorical
             self.df = df
             assert "has_internet_service" in self.df.columns, "has_internet_service column not found"
