@@ -1,0 +1,18 @@
+models:
+  - model_type: catboost
+    target: churn_label
+    features_needed:
+      - tenure_months
+      - total_charges_quarter
+      - num_referrals
+      - total_long_distance_fee
+      - contract_type
+    encoders_needed:
+      - minmax_scaler:
+        - tenure_months
+        - total_charges_quarter
+        - num_referrals
+        - total_long_distance_fee
+      
+  - model_type: xgboost
+  

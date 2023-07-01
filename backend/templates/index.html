@@ -5,10 +5,46 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <link rel="stylesheet" href="../static/css/styles.css"
 </head>
 <body>
-  <div class="container">  
+  <div class="container">
+ -->
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-5">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title">Churn Prediction</div>
+                    <form>
+                        <div class="form-floating my-2">
+                            <input type="text" id="tenure_months" class="form-control form-control-sm" placeholder="0" required>
+                            <label for="tenure_monthsl" >Tenure Months</label>
+                        </div>
+                        <div class="form-floating my-2">
+                            <input type="num_referrals" id="num_referrals" class="form-control form-control-sm" placeholder="0" required>
+                            <label for="num_referrals" >Num of Referrals</label>
+                        </div>
+                        <div class="form-floating my-2">
+                            <input type="total_long_distance_fee" id="total_long_distance_fee" class="form-control form-control-sm" placeholder="0" required>
+                            <label for="total_long_distance_fee" > Total Long Distance Fee ($)</label>
+                        </div>
+                        <div class="form-floating my-2">
+                            <input type="total_charges_quarter" id="total_charges_quarter" class="form-control form-control-sm" placeholder="0" required>
+                            <label for="total_charges_quarter" > Total Charges Per Quarter0 ($)</label>
+                        </div>
+                        <button class="btn btn-primary">Sign Up!</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+  </div>
+  
+
+  <!-- <div class="container">  
     <form id="contact" action="/predict" method="post">
       <h3>Churn Prediction</h3>
       <h4>Fill in the following information and get the prediction!</h4>
@@ -43,6 +79,7 @@
         <button name="submit" type="submit" id="contact-submit" data-submit="...Sending">Submit</button>
       </fieldset>
     </form>
-  </div>
+  </div> -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </body>
 </html>
