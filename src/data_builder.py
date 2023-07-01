@@ -20,14 +20,9 @@ class DataBuilder:
         """
         Takes in the joined DF. 
         """
-        pd.set_option('display.max_columns', None)  # None will display all columns
-        self.pca = None
+        # pd.set_option('display.max_columns', None)  # None will display all columns
         self.df = df
         self.build_train_test_set()
-        self.get_corr_to_target()
-        # self.perform_pca()
-        self.save()
-
 
     def build_train_test_set(self):
         """
@@ -84,22 +79,6 @@ class DataBuilder:
         transformed_features = self.pca.fit_transform(features)
         self.transformed_X_train = pd.DataFrame(data=transformed_features, columns=[f"PC{i+1}" for i in range(n_components)])
 
-        # Retrieving important features
-        # get the index of the most important feature on EACH component
-        # LIST COMPREHENSION HERE
-        most_important = [np.abs(self.pca.components_[i]).argmax() for i in range(n_components)]
-
-        initial_feature_names = features.columns
-        # get the names
-        most_important_names = [initial_feature_names[most_important[i]] for i in range(n_components)]
-
-        # LIST COMPREHENSION HERE AGAIN
-        dic = {'PC{}'.format(i): most_important_names[i] for i in range(n_components)}
-
-        # build the dataframe
-        df = pd.DataFrame(dic.items())
-        print(f"The top {n_components} features are: {df}")
-
         return self.transformed_X_train
     
     def get_transformed_X_train(self)->pd.DataFrame:
@@ -117,14 +96,14 @@ class DataBuilder:
     def get_y_test(self)->pd.Series:
         return self.y_test
     
-    def save(self):
-        """
-        Saves pca object to pickle file.
-        """
-        if self.pca != None:
-            with open('pca.pkl', 'wb') as file:
-                pickle.dump(self.pca, file)
-            print("Saved PCA object to pickle file.")
+    # def save(self):
+    #     """
+    #     Saves pca object to pickle file.
+    #     """
+    #     if self.pca != None:
+    #         with open('pca.pkl', 'wb') as file:
+    #             pickle.dump(self.pca, file)
+    #         print("Saved PCA object to pickle file.")
 
     def get_negative(self):
         # Filter the transformed X_train based on churn_label = 0
@@ -142,10 +121,15 @@ if __name__ == "__main__":
     # etl.use_local_data("research/data_given/")
     etl.retrieve_tables()
     etl.join_tables()
-
     df = etl.get_df()
-    print(df[df['churn_label'] == "Yes"][["tenure_months",'num_referrals','total_long_distance_fee','total_charges_quarter','contract_type']].head())
-    print(df[df['churn_label'] == "No"][["tenure_months",'num_referrals','total_long_distance_fee','total_charges_quarter','contract_type']].head())
-    # dp = DataPreprocessor(df)
+    # print(df[df['churn_label'] == "Yes"][["tenure_months",'num_referrals','total_long_distance_fee','total_charges_quarter','contract_type']].head())
+    # print(df[df['churn_label'] == "No"][["tenure_months",'num_referrals','total_long_distance_fee','total_charges_quarter','contract_type']].head())
+    dp = DataPreprocessor(df)
+    dp.preprocess()
+
+    db = DataBuilder(dp.get_df())
+    db.get_corr_to_target()
+    # print(dp.get_df().head()
     # db = DataBuilder(dp.get_df())
+    # db.get_corr_to_target()
     # db.get_negative()

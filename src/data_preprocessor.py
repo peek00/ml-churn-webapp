@@ -4,6 +4,8 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder, MinMaxScaler
 from typing import Optional
 from pathlib import Path
 import pickle
+from typing import List
+import os
 
 from data_etl import DataETL
 
@@ -14,18 +16,76 @@ class DataPreprocessor:
 
     def __init__(self, df:pd.DataFrame):
         """
-        Assume that the table has been fully joined.
+        Takes in a fully joined dataframe and a list of encoders to use.
         """
         self.df = df
         self.scaler = MinMaxScaler()
-        # self.one_hot_encoder = OneHotEncoder()
+        self.one_hot_encoder = OneHotEncoder()
         self.label_encoder = LabelEncoder()
         # self._validate_df()
-        self.__preprocess()
+        # self.__preprocess()
         
         # pd.set_option('display.max_columns', None)  # None will display all columns
         # print(self.df.head())
 
+    def preprocess(self):
+        self.__preprocess()
+    
+    def __load_encoder(self, encoder_name:str, dir:Path="preprocess"):
+        """
+        Assuming files are in a folder called preprocess and are labelled as name.pkl
+        """
+        encoder_filename = f"{encoder_name}.pkl"
+        encoder_path = os.path.join(dir, encoder_filename)
+        try:
+            with open(encoder_path, 'rb') as file:
+                setattr(self, encoder_name, pickle.load(file))
+        except FileNotFoundError:
+            print(f"Encoder file not found: {encoder_path}")
+            encoder = None
+        except pickle.UnpicklingError:
+            print(f"Error: Failed to unpickle encoder file: {encoder_path}")
+            encoder = None
+
+
+    def transform(self, target:str, features:List[str], encoders:List[str]):
+        """
+        This transform is done for the training phase.
+        """
+        
+        new_df = self.df[features]
+        new_df[target] = self.df[target]
+
+        # Loops through encoders and applies them
+        for encoder in encoders:
+            for encoder_name, features in encoder.items():
+                self.__load_encoder(encoder_name)
+                new_df[features] = getattr(self, encoder_name).transform(new_df[features])
+        
+        # Specific to this, load in target and customer status to preprocess them
+        mapping = {
+            "Joined": 0,
+            "Stayed": 1,
+            "Churned": 2,
+            'Month-to-Month':0, 
+            'One Year':1, 
+            'Two Year':2
+        }
+
+        # Preprocessing the target
+        target_df = pd.DataFrame()
+        target_df[['churn_label', 'customer_status']] = self.df[['churn_label', 'customer_status']]
+        target_df['customer_status'] = target_df['customer_status'].map(mapping)
+        target_df.loc[target_df['customer_status'] == 2, 'churn_label'] = 1
+        target_df.loc[target_df['customer_status'] == 0, 'churn_label'] = 0
+        target_df.loc[target_df['customer_status'] == 1, 'churn_label'] = 0
+
+        new_df['churn_label'] = target_df['churn_label']
+        new_df['contract_type'] = new_df['contract_type'].map(mapping)
+
+        self.transformed_df = new_df
+        return self.transformed_df
+    
     def get_df(self)->pd.DataFrame:
         return self.df
     
@@ -41,29 +101,53 @@ class DataPreprocessor:
         Perform all preprocessing steps.
         """
         # Doing this for catboost ONLY
-        new_df = pd.DataFrame()
-        new_df['contract_type'] = self.__map_categorical(self.df['contract_type'], custom_mapping={'Month-to-Month':0, 'One Year':1, 'Two Year':2})
-        new_df['num_referrals'] = self.df['num_referrals']
-        new_df['tenure_months'] = self.df['tenure_months']
-        new_df['total_long_distance_fee'] = self.df['total_long_distance_fee']
-        new_df['total_charges_quarter'] = self.df['total_charges_quarter']
-        new_df['customer_status'] = self.df['customer_status']
-        new_df['churn_label'] = self.df['churn_label']
+        # new_df = pd.DataFrame()
+        # new_df['contract_type'] = self.__map_categorical(self.df['contract_type'], custom_mapping={'Month-to-Month':0, 'One Year':1, 'Two Year':2})
+        # new_df['num_referrals'] = self.df['num_referrals']
+        # new_df['tenure_months'] = self.df['tenure_months']
+        # new_df['total_long_distance_fee'] = self.df['total_long_distance_fee']
+        # new_df['total_charges_quarter'] = self.df['total_charges_quarter']
+        # new_df['customer_status'] = self.df['customer_status']
+        # new_df['churn_label'] = self.df['churn_label']
+        # new_df['customer_status'] = self.__label_encode(self.df['customer_status'])
+        #  # Fixing churn_labels
+        # new_df.loc[new_df['customer_status'] == 2, 'churn_label'] = 1
+        # new_df.loc[new_df['customer_status'] == 0, 'churn_label'] = 0
+        # new_df.loc[new_df['customer_status'] == 1, 'churn_label'] = 0
+
+        # Doing this for PCA
+        scalar_values = self.df[["tenure_months", "total_long_distance_fee", "total_charges_quarter", "num_dependents" ]]
+        to_map = self.df[["contract_type", "has_premium_tech_support", "married", "has_device_protection", "has_online_backup"]]
+
+        self.scaler = MinMaxScaler()
+        self.scaler.fit(scalar_values)
+        new_df = pd.DataFrame(self.scaler.transform(scalar_values), columns=scalar_values.columns)
+        for column in to_map.columns:
+            to_map[column] = self.__map_categorical(to_map[column], 
+                                                    custom_mapping={
+                                                        'Month-to-Month':0, 
+                                                        'One Year':1, 
+                                                        'Two Year':2,
+                                                        "Yes":1,
+                                                        "No":0})   
+        new_df = pd.concat([new_df, to_map], axis=1)    
+
         new_df['customer_status'] = self.__label_encode(self.df['customer_status'])
          # Fixing churn_labels
         new_df.loc[new_df['customer_status'] == 2, 'churn_label'] = 1
         new_df.loc[new_df['customer_status'] == 0, 'churn_label'] = 0
         new_df.loc[new_df['customer_status'] == 1, 'churn_label'] = 0
-    
-
-
-        # Creating a new min max scalar
-        self.scaler = MinMaxScaler()
-        self.scaler.fit(new_df[['tenure_months', 'total_charges_quarter', "num_referrals", "total_long_distance_fee"]])
-        new_df[['tenure_months', 'total_charges_quarter', "num_referrals", "total_long_distance_fee"]] = self.scaler.transform(new_df[['tenure_months', 'total_charges_quarter', "num_referrals", "total_long_distance_fee"]])
         new_df.drop('customer_status', axis=1, inplace=True)
         print(new_df.head())
         self.df = new_df
+
+        # Creating a new min max scalar
+        # self.scaler = MinMaxScaler()
+        # self.scaler.fit(new_df[['tenure_months', 'total_charges_quarter', "num_referrals", "total_long_distance_fee"]])
+        # new_df[['tenure_months', 'total_charges_quarter', "num_referrals", "total_long_distance_fee"]] = self.scaler.transform(new_df[['tenure_months', 'total_charges_quarter', "num_referrals", "total_long_distance_fee"]])
+        # new_df.drop('customer_status', axis=1, inplace=True)
+        # print(new_df.head())
+        # self.df = new_df
 
 
         # # Map string values to categorical
@@ -256,7 +340,6 @@ if __name__ == "__main__":
 
     dp = DataPreprocessor(df)
     dp.df.head()
-    print(dp.get_NaN_count())
     dp.save()
  
 
