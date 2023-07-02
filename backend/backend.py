@@ -85,10 +85,12 @@ def get_prediction():
     # Test values for prediction == 0
     # values = [[-1.240957, -0.914264, 0.437043, -0.800090, 0.421031]]
     # processed_input = np.array(values)
-    predictions = model.predict(processed_input)
-    print(processed_input)
+    binary_predict = model.predict(processed_input)
+    logits = model.predict_proba(processed_input)
     return {
-        "prediction": int(predictions[0].astype(int))
+        "prediction": int(binary_predict[0].astype(int)),
+        "logits": logits.astype(float).tolist(), 
+        "processed_input": processed_input.tolist(),
     }
 
 
