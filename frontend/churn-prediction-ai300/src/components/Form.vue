@@ -1,7 +1,3 @@
-<script setup>
-
-</script>
-
 <template>
   <div class="row vh-100 align-items-center justify-content-center">
     <div class="col-8 bg-light h-75 rounded">
@@ -14,9 +10,9 @@
             <h1>
               Customer Churn Prediction
             </h1>
-            <h7>
+            <p>
               Fill in the following details and hit submit to get the prediction!
-            </h7>
+            </p>
           </div>
         
           <div class="row">
@@ -24,35 +20,35 @@
               <label for="total_long_distance_fee" class="form-label">Total Long Distance Fee</label>
               <div class="input-group mb-3">
                 <span class="input-group-text" id="basic-addon1">$</span>
-                <input type="number" class="form-control" id="total_long_distance_fee" name="total_long_distance_fee" >
+                <input type="number" class="form-control" id="total_long_distance_fee" :placeholder="default_values.def_total_long_distance_fee" v-model="total_long_distance_fee" >
               </div>
             </div>
             <div class="col-4">
               <label for="total_charges_quarter" class="form-label">Total Charges Quarter</label>
               <div class="input-group mb-3">
                 <span class="input-group-text" id="basic-addon1">$</span>
-                <input type="number" class="form-control" id="total_charges_quarter" name="total_charges_quarter" >
+                <input type="number" class="form-control" id="total_charges_quarter" :placeholder="default_values.def_total_charges_quarter" v-model="total_charges_quarter" >
               </div>
             </div>
           </div>
 
           <div class="col-6 mb-3">
             <label for="tenure_months" class="form-label">Tenure Months</label>
-            <input type="number" class="form-control" id="tenure_months" name="tenure_months">
+            <input type="number" class="form-control" id="tenure_months" :placeholder="default_values.def_tenure_months" v-model="tenure_months">
           </div>
 
           <div class="col-6 mb-3">
             <label for="num_dependents" class="form-label">Num of Dependents</label>
-            <input type="number" class="form-control" id="num_dependents" name="num_dependents">
+            <input type="number" class="form-control" id="num_dependents" :placeholder="default_values.def_num_dependents" v-model="num_dependents">
           </div>
 
           <div class="mb-3 col-3 form-check">
-              <input type="checkbox" class="form-check-input" id="married">
-              <label class="form-check-label" for="married" name="married">Happily Married?</label>
+              <input type="checkbox" class="form-check-input"  v-model="married" id="married">
+              <label class="form-check-label" for="married">Happily Married?</label>
             </div>
           <div class="col-6 pb-4">
             Contract Type
-            <select class="form-select" name="contract_type">
+            <select class="form-select" v-model="contract_type">
               <option value="Month-to-Month" selected>Month to Month</option>
               <option value="One Year">One Year</option>
               <option value="Two Year">Two Year</option>
@@ -61,20 +57,20 @@
           <h5> Does the user have the following features?</h5>
             <div class="col-12 pb-4">
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="has_premium_tech_support" value="option1">
-                <label class="form-check-label" for="has_premium_tech_support" name="has_premium_tech_support">Premium Tech Support</label>
+                <input class="form-check-input" type="checkbox" id="has_premium_tech_support" v-model="has_premium_tech_support">
+                <label class="form-check-label" for="has_premium_tech_support" >Premium Tech Support</label>
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="has_device_protection" value="option2">
-                <label class="form-check-label" for="has_device_protection" name="has_device_protection">Device Protection</label>
+                <input class="form-check-input" type="checkbox" id="has_device_protection"  v-model="has_device_protection" >
+                <label class="form-check-label" for="has_device_protection">Device Protection</label>
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="has_online_backup" value="option3" >
-                <label class="form-check-label" for="has_online_backup" name="has_online_backup">Online Backup</label>
+                <input class="form-check-input" type="checkbox" id="has_online_backup"  v-model="has_online_backup">
+                <label class="form-check-label" for="has_online_backup">Online Backup</label>
               </div>
             </div>
 
-            <button type="submit" class="btn btn-primary">Get Prediction</button>
+            <button type="submit" @click="submitForm()" class="btn btn-primary">Get Prediction</button>
         </div>
       </div>
     </div>
@@ -85,3 +81,37 @@
 <style scoped>
 
 </style>
+
+<script>
+export default {
+  data(){
+    return{
+      default_values:{
+        def_total_long_distance_fee: 500.00,
+        def_total_charges_quarter: 125.00,
+        def_tenure_months: 6,
+        def_num_dependents: 0,
+        def_married: "No",
+      },
+      contract_type:"Month-to-Month",
+    }
+  }, 
+  methods: {
+    submitForm() {
+      const formData = {
+        total_long_distance_fee: this.total_long_distance_fee,
+        total_charges_quarter: this.total_charges_quarter,
+        tenure_months: this.tenure_months,
+        num_dependents: this.num_dependents,
+        married: this.married || "No",
+        contract_type: this.contract_type,
+        has_premium_tech_support: this.has_premium_tech_support || "No",
+        has_device_protection: this.has_device_protection || "No",
+        has_online_backup: this.has_online_backup || "No",
+      };
+
+      console.log(formData);
+    },
+  },
+};
+</script>
