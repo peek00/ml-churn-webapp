@@ -99,10 +99,10 @@ export default {
   methods: {
     submitForm() {
       const formData = {
-        total_long_distance_fee: this.total_long_distance_fee,
-        total_charges_quarter: this.total_charges_quarter,
-        tenure_months: this.tenure_months,
-        num_dependents: this.num_dependents,
+        total_long_distance_fee: this.total_long_distance_fee || this.default_values.def_total_long_distance_fee,
+        total_charges_quarter: this.total_charges_quarter || this.default_values.def_total_charges_quarter,
+        tenure_months: this.tenure_months || this.default_values.def_tenure_months,
+        num_dependents: this.num_dependents || this.default_values.def_num_dependents,
         married: this.married || "No",
         contract_type: this.contract_type,
         has_premium_tech_support: this.has_premium_tech_support || "No",
