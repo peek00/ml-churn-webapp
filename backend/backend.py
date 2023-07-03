@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
 import joblib
 import numpy as np
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, MinMaxScaler
@@ -13,6 +14,7 @@ from backend_data_preprocessor import DataPreprocessor
 
 
 app = Flask(__name__)
+CORS(app)
 
 def load_encoders(dir: Path = "preprocess"):
     """
