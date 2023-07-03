@@ -2,8 +2,19 @@
   <div class="row vh-100 align-items-center justify-content-center">
     <div class="col-8 bg-light h-75 rounded">
       <div class="row h-100 p-3">
-        <div class="col-5 bg-dark rounded text-white ">
-          Random Content here
+        <div class="col-5 bg-dark rounded text-white p-4 ps-5">
+          <p class="fw-bold ">
+            AI 300
+          </p>
+
+          <h3 >
+            Predict your customer churn with us now!
+          </h3>
+          <p>
+            This machine learning prediction uses a CatBoost model and Principal Component Analysis (PCA) to predict whether a customer is likely to churn or not.
+            ,<br>
+            The model was trained on a dataset on Kaggle and made as part of a project by Heicoder.
+          </p>
         </div>
         <div class="col-7 rounded px-5">
           <div class="row pb-4">
@@ -32,9 +43,15 @@
             </div>
           </div>
 
-          <div class="col-6 mb-3">
-            <label for="tenure_months" class="form-label">Tenure Months</label>
-            <input type="number" class="form-control" id="tenure_months" :placeholder="default_values.def_tenure_months" v-model="tenure_months">
+          <div class="row">
+            <div class="col-3 mb-3">
+              <label for="tenure_months" class="form-label">Tenure Months</label>
+              <input type="number" class="form-control" id="tenure_months" :placeholder="default_values.def_tenure_months" v-model="tenure_months">
+            </div>
+            <div class="col-3 mb-3">
+              <label for="num_referrals" class="form-label">Num of Referrals</label>
+              <input type="number" class="form-control" id="num_referrals" :placeholder="default_values.def_num_referrals" v-model="num_referrals">
+            </div>
           </div>
 
           <div class="col-6 mb-3">
@@ -69,8 +86,13 @@
                 <label class="form-check-label" for="has_online_backup">Online Backup</label>
               </div>
             </div>
-
-            <button type="submit" @click="submitForm()" class="btn btn-primary">Get Prediction</button>
+            <button type="submit" @click="submitForm()" class="btn btn-primary me-3">Get Prediction</button>
+            <span class="text-danger fw-bold" v-if="prediction == 1">
+              This customer is expected to churn!
+            </span>
+            <span class="text-success fw-bold" v-else-if="prediction == 0">
+              This customer is expected to stay!
+            </span>
         </div>
       </div>
     </div>
@@ -83,6 +105,8 @@
 </style>
 
 <script>
+
+import axios from "axios";
 export default {
   data(){
     return{
@@ -92,8 +116,14 @@ export default {
         def_tenure_months: 6,
         def_num_dependents: 0,
         def_married: "No",
+        def_num_referrals: 0,
       },
       contract_type:"Month-to-Month",
+      prediction: {
+        "empty":"", 
+        1: "This customer is expected to churn!",
+        0: "This customer is expected to stay!",
+      },
     }
   }, 
   methods: {
@@ -103,14 +133,25 @@ export default {
         total_charges_quarter: this.total_charges_quarter || this.default_values.def_total_charges_quarter,
         tenure_months: this.tenure_months || this.default_values.def_tenure_months,
         num_dependents: this.num_dependents || this.default_values.def_num_dependents,
+        num_referrals: this.num_referrals || this.default_values.def_num_referrals,
         married: this.married || "No",
         contract_type: this.contract_type,
         has_premium_tech_support: this.has_premium_tech_support || "No",
         has_device_protection: this.has_device_protection || "No",
         has_online_backup: this.has_online_backup || "No",
       };
+      axios.post(
+        "http://localhost:5000/predict",
+        formData
+      ).then((response) => {
+        console.log("Response is", response.data);
+        // Set response
+        this.prediction = response.data.prediction;
+        console.log(response.data.prediction)
 
-      console.log(formData);
+      }).catch((error) => {
+        console.log("Error is", error);
+      })
     },
   },
 };
