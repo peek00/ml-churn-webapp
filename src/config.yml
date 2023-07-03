@@ -3,16 +3,36 @@ models:
     target: churn_label
     features_needed:
       - tenure_months
-      - total_charges_quarter
-      - num_referrals
       - total_long_distance_fee
+      - total_charges_quarter
+      - num_dependents
+      - num_referrals
       - contract_type
+      - has_premium_tech_support
+      - married
+      - has_device_protection
+      - has_online_backup
     encoders_needed:
       - minmax_scaler:
         - tenure_months
-        - total_charges_quarter
-        - num_referrals
         - total_long_distance_fee
+        - total_charges_quarter
+        - num_dependents
+        - num_referrals
+  # - model_type: catboost
+  #   target: churn_label
+  #   features_needed:
+  #     - tenure_months
+  #     - total_charges_quarter
+  #     - num_referrals
+  #     - total_long_distance_fee
+  #     - contract_type
+  #   encoders_needed:
+  #     - minmax_scaler:
+  #       - tenure_months
+  #       - total_charges_quarter
+  #       - num_referrals
+  #       - total_long_distance_fee
       
   - model_type: xgboost
   
