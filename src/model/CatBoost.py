@@ -11,7 +11,7 @@ from data_builder import DataBuilder
 
 class CatBoost(Model):
     def __init__(self, name:str):
-        self.model = CatBoostClassifier(iterations=1000, learning_rate=0.1, depth=6, loss_function='Logloss', verbose=True, random_seed=42)
+        self.model = CatBoostClassifier(iterations=200, learning_rate=0.1, depth=6, loss_function='Logloss', verbose=True, random_seed=42)
         self.name = name
 
     def train(self, X, y, n_splits=5):

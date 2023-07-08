@@ -4,8 +4,9 @@ from data_etl import DataETL
 from model.XGBoost import XGBoost
 from model.CatBoost import CatBoost
 from model.evaluator import ModelEvaluator
-# from plotly_utility import PlotlyUtility
-
+import pickle
+from visualisation.PlotterUtility import PlotterUtility
+from sklearn.metrics import confusion_matrix, roc_curve
 from pathlib import Path
 import yaml
 import pandas as pd
@@ -48,10 +49,12 @@ def train(df:pd.DataFrame, model):
 
 def evaluate(model, X_test:pd.DataFrame, y_test:pd.Series):
 
-    metrics_dict = ModelEvaluator(model, X_test, y_test)\
+    metrics_dict, metrics_across_thresholds = ModelEvaluator(model, X_test, y_test)\
     .evaluate(ModelEvaluator.supported_metrics)
     for metric, value in metrics_dict.items():
         print(f"{metric} = {round(value, 4)}")
+    return metrics_across_thresholds
+
 
 
 if __name__ == "__main__":
@@ -67,5 +70,20 @@ if __name__ == "__main__":
     # Initialize model
     model = CatBoost("catboost")
     model, X_train, y_train, X_test, y_test = train(processed_df, model)
-    evaluate(model, X_test, y_test)
-    model.save()
+
+    # Loading model instead, override the model
+    # model_path = "D:/GitHub/AI300_Capstone/team08/backend/model/catboost_model.pkl"
+    # with open(model_path, 'rb') as file:
+    #     model = pickle.load(file)
+    metrics_across_thresholds = evaluate(model, X_test, y_test)
+
+    # Visualiing
+    # plotter = PlotterUtility("catboost", mode="plotly")
+    # plotter.plot_metrics_across_thresholds(metrics_across_thresholds,  focus="accuracy")
+    
+    # y_pred_prob = model.predict_proba(X_test)
+    # fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob[:,1])
+    # plotter.plot_roc_curve(fpr, tpr, thresholds)
+
+    
+    # model.save()
