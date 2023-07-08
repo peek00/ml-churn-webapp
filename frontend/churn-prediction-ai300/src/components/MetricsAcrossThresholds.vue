@@ -22,12 +22,20 @@ onMounted(() => {
 
   const layout = {
     xaxis: {
-      title: 'Key'
+      title: 'Thresholds'
     },
     yaxis: {
       title: 'Accuracy'
     },
     hovermode: 'closest',
+    title:{
+      text: `Metrics Across Thresholds`,
+        font: { size: 20 },
+        automargin: true,
+        xanchor: 'center',
+        x: 0.5,
+        pad: { t: 20 },
+    }
   };
 
   Plotly.newPlot('plot', [data], layout);
@@ -35,5 +43,5 @@ onMounted(() => {
 </script>
 
 <template>
-  <div id="plot" :ref="plot" style="width: 1000px; height: 500px;"> Hello </div>
+  <div id="plot" :ref="plot" style="width: 1000px; height: 500px;"> </div>
 </template>

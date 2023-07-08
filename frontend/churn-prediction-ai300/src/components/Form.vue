@@ -1,5 +1,5 @@
 <template>
-  <div class="row vh-100 align-items-center justify-content-center">
+  <div class="row align-items-center justify-content-center" style="height:90vh">
     <div class="col-8 bg-light h-75 rounded">
       <div class="row h-100 p-3">
         <div class="col-5 bg-dark rounded text-white p-4 ps-5">
@@ -105,7 +105,6 @@
 </style>
 
 <script>
-
 import axios from "axios";
 export default {
   data(){
@@ -128,6 +127,9 @@ export default {
   }, 
   methods: {
     submitForm() {
+      console.log(process.env)
+      console.log("http://" + process.env.VITE_VUE_APP_PREDICT_URL + "/predict")
+      console.log(process.env)
       const formData = {
         total_long_distance_fee: this.total_long_distance_fee || this.default_values.def_total_long_distance_fee,
         total_charges_quarter: this.total_charges_quarter || this.default_values.def_total_charges_quarter,
@@ -141,7 +143,9 @@ export default {
         has_online_backup: this.has_online_backup || "No",
       };
       axios.post(
-        "http://localhost:5000/predict",
+        // "http://localhost:5000/predict",
+        // process.env.VUE_APP_PREDICT_URL + "predict",
+        process.env.VITE_VUE_APP_PREDICT_URL + "/predict",
         formData
       ).then((response) => {
         console.log("Response is", response.data);
