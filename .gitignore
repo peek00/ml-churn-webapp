@@ -31,3 +31,5 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+LOGIN_THINGS.md
