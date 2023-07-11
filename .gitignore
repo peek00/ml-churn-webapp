@@ -1,4 +1,5 @@
 .env
+catboost_info/
 *.csv
 .vscode/
 *.pyc

@@ -85,7 +85,6 @@ def get_prediction():
     with open(model_path, 'rb') as file:
         model = pickle.load(file)
     # Test values for prediction == 0
-    # values = [[-1.240957, -0.914264, 0.437043, -0.800090, 0.421031]]
     # processed_input = np.array(values)
     binary_predict = model.predict(processed_input)
     logits = model.predict_proba(processed_input)

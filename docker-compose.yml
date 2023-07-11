@@ -1,0 +1,26 @@
+version: "3.7"
+
+services:
+  backend:
+    build: 
+      dockerfile: Dockerfile.backend
+    ports:
+      - "5000:5000"
+    networks:
+      - mynetwork
+
+  frontend:
+    build: 
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "80:80"
+    environment:
+      - VITE_VUE_APP_PREDICT_URL=backend #This gets passed as as string when i want it to be the address of the above
+      - VITE_VUE_CONTAINER_HOSTNAME=my-container
+    depends_on:
+      - backend
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:

@@ -10,6 +10,7 @@ from sklearn.metrics import confusion_matrix, roc_curve
 from pathlib import Path
 import yaml
 import pandas as pd
+import json
 
 def get_config(config:Path, model_type:str):
     with open(config, 'r') as file:
@@ -53,6 +54,8 @@ def evaluate(model, X_test:pd.DataFrame, y_test:pd.Series):
     .evaluate(ModelEvaluator.supported_metrics)
     for metric, value in metrics_dict.items():
         print(f"{metric} = {round(value, 4)}")
+    with open ("metrics_across_thresholds.json", 'w') as file:
+        json.dump(metrics_across_thresholds, file)
     return metrics_across_thresholds
 
 
@@ -72,18 +75,21 @@ if __name__ == "__main__":
     model, X_train, y_train, X_test, y_test = train(processed_df, model)
 
     # Loading model instead, override the model
-    # model_path = "D:/GitHub/AI300_Capstone/team08/backend/model/catboost_model.pkl"
-    # with open(model_path, 'rb') as file:
-    #     model = pickle.load(file)
     metrics_across_thresholds = evaluate(model, X_test, y_test)
 
     # Visualiing
-    # plotter = PlotterUtility("catboost", mode="plotly")
+    plotter = PlotterUtility("catboost", mode="plotly")
     # plotter.plot_metrics_across_thresholds(metrics_across_thresholds,  focus="accuracy")
     
-    # y_pred_prob = model.predict_proba(X_test)
-    # fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob[:,1])
-    # plotter.plot_roc_curve(fpr, tpr, thresholds)
+    y_pred_prob = model.predict_proba(X_test)
+    fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
 
-    
-    # model.save()
+    data = {
+        "fpr": fpr.tolist(),
+        "tpr": tpr.tolist(),
+        "thresholds": thresholds.tolist()
+    }
+
+    with open("roc_curve.json", 'w') as file:
+        json.dump(data, file)
+    model.save()

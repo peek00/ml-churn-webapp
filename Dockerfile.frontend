@@ -1,0 +1,30 @@
+# FROM node:14 as frontend
+
+# WORKDIR /app
+
+# COPY /frontend/churn-prediction-ai300 .
+
+# COPY /frontend/churn-prediction-ai300/.env .env
+# COPY /frontend/update_env.sh ./update_env.sh
+# RUN npm install
+# # Run the shell script
+# EXPOSE 5173
+# ENTRYPOINT [ "./update_env.sh" ]
+# # CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+
+# Stage 1: Build Vue application
+FROM node:lts AS build-stage
+WORKDIR /app
+COPY /frontend/churn-prediction-ai300 .
+COPY /frontend/churn-prediction-ai300/.env .env
+RUN npm install
+RUN npm run build
+ENTRYPOINT [ "./update_env.sh" ]
+
+
+# Stage 2: Serve Vue application with Nginx
+FROM nginx:stable-alpine
+COPY --from=build-stage /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
